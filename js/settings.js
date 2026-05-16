@@ -1,3 +1,4 @@
+// js/settings.js (version finale corrigée)
 import * as Storage from './storage.js';
 import * as Medications from './medications.js';
 import * as Export from './export.js';
@@ -7,8 +8,9 @@ import * as PWA from './pwa.js';
 
 let repasList = [];
 
-async function init() {
-  // Charger les données
+// Initialisation après chargement du DOM
+document.addEventListener('DOMContentLoaded', async () => {
+  // Chargement des données
   repasList = Storage.loadRepas();
   Medications.initMeds();
   await IA.loadKnowledgeBase();
@@ -17,16 +19,17 @@ async function init() {
   Medications.renderMeds('medicationsList');
   renderHealthConditions();
   
-  // Paramètres IA
+  // Interface IA
   UISettings.renderIASettingsPanel('iaSettingsPanel');
   
   // Mode sombre
   PWA.initDarkMode();
   
-  // Événements
+  // Branchement des événements
   bindEvents();
-}
+});
 
+// Affichage des problèmes de santé
 function renderHealthConditions() {
   const container = document.getElementById('healthList');
   if (!container) return;
@@ -56,6 +59,7 @@ function renderHealthConditions() {
   });
 }
 
+// Ajout d'un problème de santé
 function addHealthCondition(condition) {
   if (!condition.trim()) return;
   let conditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
@@ -64,6 +68,7 @@ function addHealthCondition(condition) {
   renderHealthConditions();
 }
 
+// Gestion des événements
 function bindEvents() {
   // Ajout médicament
   const addMedBtn = document.getElementById('addMedBtn');
@@ -90,7 +95,7 @@ function bindEvents() {
     });
   }
   
-  // Export toutes données
+  // Export
   const exportBtn = document.getElementById('exportAllDataBtn');
   if (exportBtn) {
     exportBtn.addEventListener('click', () => {
@@ -98,7 +103,7 @@ function bindEvents() {
     });
   }
   
-  // Effacer toutes données
+  // Effacer tout
   const clearBtn = document.getElementById('clearAllDataBtn');
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
@@ -109,8 +114,18 @@ function bindEvents() {
       }
     });
   }
+  
+  // RETOUR VERS ACCUEIL (flèche)
+  const backBtn = document.getElementById('backToHomeBtn');
+  if (backBtn) {
+    backBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.href = 'index.html';
+    });
+  }
 }
 
+// Échappement HTML
 function escapeHtml(str) {
   if (!str) return "";
   return str.replace(/[&<>]/g, function(m) {
@@ -120,5 +135,3 @@ function escapeHtml(str) {
     return m;
   });
 }
-
-init();
