@@ -1,0 +1,34 @@
+/* ========== FOOTER RGPD ========== */
+.privacy-footer {
+  margin-top: 32px;
+  padding: 16px;
+  background: var(--primary-light);
+  border-radius: 16px;
+  font-size: 0.75rem;
+}
+
+.privacy-footer details {
+  cursor: pointer;
+}
+
+.privacy-footer summary {
+  font-weight: bold;
+  padding: 8px;
+  color: var(--primary);
+}
+
+.privacy-content {
+  padding: 12px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.privacy-content p {
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+.privacy-content a {
+  color: var(--primary);
+  text-decoration: none;
+}

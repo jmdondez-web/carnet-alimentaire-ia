@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Carnet Alimentaire - IA éducative</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2E7D32">
+  <meta name="description" content="Application éducative d'aide alimentaire - repères PNNS - RGPD compliant">
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>📘 Carnet Alimentaire</h1>
+      <p class="subtitle">Éducation nutritionnelle — repères PNNS</p>
+      <button id="darkModeToggle" class="dark-mode-btn">🌙 Mode sombre</button>
+    </header>
+
+    <!-- MÉDICAMENTS -->
+    <div class="medications-section">
+      <h2>💊 Mes traitements</h2>
+      <div class="med-input-group">
+        <input type="text" id="medNameInput" placeholder="Nom du médicament">
+        <input type="text" id="medConditionInput" placeholder="Pour quoi ? (ex: tension)">
+        <button id="addMedBtn" class="small-btn">➕ Ajouter</button>
+      </div>
+      <ul id="medicationsList" class="med-list"></ul>
+      <p class="info-note">⚠️ Ces données restent sur ton téléphone. L'IA s'en sert pour détecter des interactions.</p>
+    </div>
+
+    <!-- EAU -->
+    <div class="water-section">
+      <h2>💧 Suivi d'eau</h2>
+      <div class="water-buttons">
+        <button class="water-btn" data-cl="20">20 cl 💧</button>
+        <button class="water-btn" data-cl="33">33 cl 🥤</button>
+        <button class="water-btn" data-cl="50">50 cl 🍼</button>
+      </div>
+      <div class="water-today">
+        <span>Aujourd'hui : </span>
+        <strong id="waterTotal">0</strong> <span>cl</span>
+        <button id="resetWaterBtn" class="small-btn reset-water">↺ Réinitialiser</button>
+      </div>
+      <div class="water-goal">
+        <progress id="waterProgress" value="0" max="150"></progress>
+        <small>Objectif PNNS : ~150 cl/jour (1.5L)</small>
+      </div>
+      <button id="waterHistoryBtn" class="history-link">📊 Historique</button>
+      <div id="waterHistoryPanel" style="display:none;" class="history-panel"></div>
+    </div>
+
+    <!-- AJOUT REPAS -->
+    <div class="add-section">
+      <h2>🍽️ Ajouter un repas</h2>
+      <label>📅 Date & heure</label>
+      <input type="datetime-local" id="mealDatetime">
+      <label>✏️ Description</label>
+      <textarea id="mealText" placeholder="Ex: Salade de lentilles, pamplemousse, riz"></textarea>
+      <div class="voice-row">
+        <button id="startVoiceBtn" class="voice-btn">🎤 Dictée vocale</button>
+        <button id="stopVoiceBtn" class="stop-btn" disabled>⏹️ Arrêter</button>
+      </div>
+      <p id="voiceStatus" class="voice-status"></p>
+      <div class="photo-row">
+        <button id="takePhotoBtn" class="photo-btn">📷 Prendre une photo</button>
+        <button id="uploadPhotoBtn" class="upload-btn">🖼️ Galerie</button>
+      </div>
+      <div id="photoPreview" class="photo-preview" style="display:none;">
+        <img id="previewImg" alt="Aperçu">
+        <button id="removePhotoBtn" class="remove-photo">✖️</button>
+      </div>
+      <button id="saveMealBtn" class="save-btn">💾 Enregistrer</button>
+    </div>
+
+    <!-- ALERTE IA -->
+    <div id="alertBanner" class="alert-banner" style="display:none;">
+      <span id="alertMessage"></span>
+      <button id="closeAlertBtn">✖️</button>
+    </div>
+
+    <!-- CONSEIL PNNS -->
+    <div class="suggestions-section">
+      <h2>🌟 Conseil du jour</h2>
+      <p id="pnnsTip" class="tip-text">Mangez au moins 5 fruits et légumes par jour !</p>
+    </div>
+
+    <!-- PARAMÈTRES IA -->
+    <div class="settings-section">
+      <button id="toggleSettingsBtn" class="settings-toggle-btn">⚙️ Paramètres IA</button>
+      <div id="iaSettingsPanel" class="ia-settings-panel" style="display: none;"></div>
+      <div id="iaModeIndicator" class="ia-mode-indicator-container"></div>
+    </div>
+
+    <!-- HISTORIQUE -->
+    <div class="meals-section">
+      <h2>📋 Historique</h2>
+      <div class="toolbar">
+        <button id="exportBtn" class="small-btn">📎 JSON</button>
+        <button id="exportReadableBtn" class="small-btn">📄 Texte</button>
+        <button id="clearAllBtn" class="small-btn danger">🗑️ Effacer tout</button>
+      </div>
+      <ul id="mealsList"></ul>
+    </div>
+
+    <!-- FOOTER RGPD -->
+    <footer class="privacy-footer">
+      <details>
+        <summary>🔒 Confidentialité & RGPD</summary>
+        <div class="privacy-content">
+          <p><strong>Politique de confidentialité</strong></p>
+          <p>• Toutes vos données restent UNIQUEMENT sur votre téléphone (stockage local).<br>
+          • Vous pouvez supprimer toutes vos données à tout moment via "Effacer tout".<br>
+          • Vous pouvez exporter vos données (JSON ou texte lisible).<br>
+          • Les photos ne sont jamais transmises sans votre consentement explicite.<br>
+          • <strong>Mode IA externe (optionnel)</strong> : si vous l'activez, vos repas et médicaments sont envoyés au fournisseur IA choisi (Mistral/Groq).<br>
+          • Aucune donnée n'est vendue, partagée ou utilisée à des fins commerciales.<br>
+          • Hébergement : Netlify (logs de connexion anonymes à des fins techniques).</p>
+          <p><em>Pour toute question : <a href="mailto:contact@carnetalim.fr">contact@carnetalim.fr</a></em></p>
+        </div>
+      </details>
+    </footer>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

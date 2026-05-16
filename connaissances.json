@@ -1,0 +1,38 @@
+{
+  "interactions": [
+    {
+      "aliment": "pamplemousse",
+      "medicaments": ["amlodipine", "atorvastatine", "simvastatine", "nifédipine", "ciclosporine"],
+      "message": "⚠️ Le pamplemousse peut augmenter les effets secondaires de tes médicaments (tension, cholestérol). Consulte ton médecin ou pharmacien."
+    },
+    {
+      "aliment": "chou kale",
+      "medicaments": ["anticoagulant", "warfaline", "coumarine", "avk"],
+      "message": "⚠️ Les légumes verts feuillus (kale, épinards) sont riches en vitamine K, ce qui peut influencer les anticoagulants."
+    },
+    {
+      "aliment": "réglisse",
+      "medicaments": ["diurétique", "spironolactone", "amiloride", "tension"],
+      "message": "⚠️ La réglisse peut faire baisser le potassium et interagir avec tes médicaments pour la tension."
+    },
+    {
+      "aliment": "alcool",
+      "medicaments": ["paracétamol", "doliprane", "antidépresseur", "sertraline"],
+      "message": "⚠️ L'alcool peut augmenter la fatigue et les effets secondaires de tes médicaments."
+    },
+    {
+      "aliment": "fromage vieilli",
+      "medicaments": ["antidépresseur", "iproniazide", "imaos"],
+      "message": "⚠️ Certains fromages affinés peuvent interagir avec tes antidépresseurs (IMAOs)."
+    }
+  ],
+  "pnns_tips": [
+    "Mange au moins 5 fruits et légumes par jour 🍎🥕",
+    "Privilégie les céréales complètes (pain, riz, pâtes complètes) 🌾",
+    "Limite les boissons sucrées, bois de l'eau plutôt 💧",
+    "Mange du poisson au moins 2 fois par semaine 🐟",
+    "Évite de trop saler, utilise des épices à la place 🌿",
+    "Prends le temps de manger, à table et sans écran 😊",
+    "Les légumineuses (lentilles, pois chiches) sont excellentes pour la santé"
+  ]
+}
