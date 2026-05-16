@@ -24,8 +24,7 @@ async function init() {
   UI.renderMeals('mealsList');
   Water.updateWaterUI('waterTotal', 'waterProgress');
   UI.updateTip(IA.getRandomTip(), 'pnnsTip');
-  Navigation.updateMedSummary();
-  UISettings.showIAModeIndicator('iaModeIndicator');
+    UISettings.showIAModeIndicator('iaModeIndicator');
   
   // PWA + mode sombre
   PWA.registerServiceWorker();
