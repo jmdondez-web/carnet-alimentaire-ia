@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Carnet Alimentaire - Paramètres</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2E7D32">
+</head>
+<body>
+  <div class="app-container">
+    <!-- HEADER -->
+    <header class="main-header">
+      <button id="backToHomeBtn" class="icon-btn back-icon" aria-label="Retour">←</button>
+      <div class="header-title">
+        <h1>⚙️ Paramètres</h1>
+        <p class="subtitle">Gestion des traitements et options</p>
+      </div>
+      <div style="width: 40px;"></div>
+    </header>
+
+    <!-- SECTION MÉDICAMENTS -->
+    <div class="settings-card">
+      <h2>💊 Mes traitements</h2>
+      <div class="med-input-group">
+        <input type="text" id="medNameInput" placeholder="Nom du médicament">
+        <input type="text" id="medConditionInput" placeholder="Pour quoi ? (ex: tension)">
+        <button id="addMedBtn" class="btn btn-secondary btn-sm">
+          ➕ Ajouter
+        </button>
+      </div>
+      <ul id="medicationsList" class="med-list"></ul>
+      <p class="info-note">⚠️ Ces données restent sur votre téléphone. L'IA les utilise pour détecter des interactions.</p>
+    </div>
+
+    <!-- SECTION PROBLÈMES DE SANTÉ (optionnel) -->
+    <div class="settings-card">
+      <h2>🩺 Problèmes de santé</h2>
+      <div class="med-input-group">
+        <input type="text" id="healthConditionInput" placeholder="Ex: diabète, hypertension">
+        <button id="addHealthBtn" class="btn btn-secondary btn-sm">➕ Ajouter</button>
+      </div>
+      <ul id="healthList" class="med-list"></ul>
+      <p class="info-note">Ces informations aident l'IA à mieux contextualiser ses alertes.</p>
+    </div>
+
+    <!-- SECTION PARAMÈTRES IA -->
+    <div class="settings-card">
+      <h2>🤖 Intelligence artificielle</h2>
+      <div id="iaSettingsPanel" class="ia-settings-panel">
+        <!-- Le contenu est généré par ui-settings.js -->
+      </div>
+    </div>
+
+    <!-- SECTION DONNÉES -->
+    <div class="settings-card">
+      <h2>📁 Gestion des données</h2>
+      <div class="button-group">
+        <button id="exportAllDataBtn" class="btn btn-secondary btn-sm">
+          📎 Exporter toutes les données
+        </button>
+        <button id="clearAllDataBtn" class="btn btn-danger btn-sm">
+          🗑️ Effacer toutes les données
+        </button>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="privacy-footer">
+      <details>
+        <summary>🔒 Confidentialité & RGPD</summary>
+        <div class="privacy-content">
+          <p>• Toutes vos données restent sur votre téléphone.<br>
+          • Vous pouvez supprimer ou exporter vos données à tout moment.<br>
+          • Aucune donnée n'est vendue ou partagée.</p>
+        </div>
+      </details>
+    </footer>
+  </div>
+
+  <script type="module" src="js/settings.js"></script>
+</body>
+</html>

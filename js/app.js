@@ -7,30 +7,36 @@ import * as Camera from './camera.js';
 import * as UI from './ui.js';
 import * as Export from './export.js';
 import * as PWA from './pwa.js';
+import * as Navigation from './navigation.js';
 import * as UISettings from './ui-settings.js';
 
 let repasList = [];
 
 async function init() {
+  // Charger les données
   repasList = Storage.loadRepas();
   UI.setRepasList(repasList);
   Medications.initMeds();
   Water.initWater();
   await IA.loadKnowledgeBase();
   
-  Medications.renderMeds('medicationsList');
+  // Rendu initial
   UI.renderMeals('mealsList');
   Water.updateWaterUI('waterTotal', 'waterProgress');
   UI.updateTip(IA.getRandomTip(), 'pnnsTip');
+  Navigation.updateMedSummary();
   UISettings.showIAModeIndicator('iaModeIndicator');
   
+  // PWA + mode sombre
   PWA.registerServiceWorker();
   PWA.initDarkMode();
   
+  // Date par défaut
   const now = new Date();
   const localNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   document.getElementById("mealDatetime").value = localNow;
   
+  // Initialiser la voix
   Voice.initVoice(
     (text) => {
       const ta = document.getElementById("mealText");
@@ -47,6 +53,7 @@ async function init() {
   );
   
   bindEvents();
+  Navigation.initNavigation();
 }
 
 async function saveCurrentMeal() {
@@ -88,6 +95,7 @@ async function saveCurrentMeal() {
 }
 
 function bindEvents() {
+  // Voix
   document.getElementById("startVoiceBtn").onclick = () => {
     if (Voice.startVoice()) {
       document.getElementById("startVoiceBtn").disabled = true;
@@ -100,11 +108,17 @@ function bindEvents() {
     document.getElementById("startVoiceBtn").disabled = false;
     document.getElementById("stopVoiceBtn").disabled = true;
   };
+  
+  // Sauvegarde repas
   document.getElementById("saveMealBtn").onclick = saveCurrentMeal;
+  
+  // Export
   document.getElementById("exportBtn").onclick = () => Export.exportJSON(repasList);
   document.getElementById("exportReadableBtn").onclick = () => Export.exportReadable(repasList);
+  
+  // Effacer tout
   document.getElementById("clearAllBtn").onclick = () => {
-    if (confirm("Effacer tout ?")) {
+    if (confirm("Effacer tout l'historique des repas ?")) {
       repasList = [];
       Storage.saveRepas(repasList);
       UI.setRepasList(repasList);
@@ -112,17 +126,7 @@ function bindEvents() {
     }
   };
   
-  document.getElementById("addMedBtn").onclick = () => {
-    const name = document.getElementById("medNameInput").value.trim();
-    const condition = document.getElementById("medConditionInput").value.trim();
-    if (name) {
-      Medications.addMed(name, condition);
-      Medications.renderMeds('medicationsList');
-      document.getElementById("medNameInput").value = "";
-      document.getElementById("medConditionInput").value = "";
-    }
-  };
-  
+  // Eau
   document.querySelectorAll(".water-btn").forEach(btn => {
     btn.onclick = () => {
       Water.addWater(parseInt(btn.dataset.cl));
@@ -143,6 +147,7 @@ function bindEvents() {
     }
   };
   
+  // Photo
   document.getElementById("takePhotoBtn").onclick = async () => {
     const base64 = await Camera.takePhoto();
     if (base64) Camera.showPreview('photoPreview', 'previewImg', base64);
@@ -155,25 +160,11 @@ function bindEvents() {
     Camera.clearCurrentPhoto();
     Camera.hidePreview('photoPreview');
   };
+  
+  // Fermeture alerte
   document.getElementById("closeAlertBtn").onclick = () => {
     document.getElementById("alertBanner").style.display = "none";
   };
-  
-  const toggleBtn = document.getElementById("toggleSettingsBtn");
-  const settingsPanel = document.getElementById("iaSettingsPanel");
-  if (toggleBtn && settingsPanel) {
-    toggleBtn.onclick = () => {
-      if (settingsPanel.style.display === "none") {
-        UISettings.renderIASettingsPanel('iaSettingsPanel');
-        settingsPanel.style.display = "block";
-        toggleBtn.textContent = "✖️ Fermer paramètres";
-      } else {
-        settingsPanel.style.display = "none";
-        toggleBtn.textContent = "⚙️ Paramètres IA";
-        UISettings.showIAModeIndicator('iaModeIndicator');
-      }
-    };
-  }
 }
 
 init();
