@@ -9,6 +9,7 @@ import * as Export from './export.js';
 import * as PWA from './pwa.js';
 import * as Navigation from './navigation.js';
 import * as UISettings from './ui-settings.js';
+import * as Dashboard from './dashboard.js';
 
 let repasList = [];
 
@@ -19,22 +20,23 @@ async function init() {
   Medications.initMeds();
   Water.initWater();
   await IA.loadKnowledgeBase();
-  
+
   // Rendu initial
   UI.renderMeals('mealsList');
+  Dashboard.renderDashboard('pnnsDashboard', repasList);
   Water.updateWaterUI('waterTotal', 'waterProgress');
   UI.updateTip(IA.getRandomTip(), 'pnnsTip');
-    UISettings.showIAModeIndicator('iaModeIndicator');
-  
+  UISettings.showIAModeIndicator('iaModeIndicator');
+
   // PWA + mode sombre
   PWA.registerServiceWorker();
   PWA.initDarkMode();
-  
+
   // Date par défaut
   const now = new Date();
   const localNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   document.getElementById("mealDatetime").value = localNow;
-  
+
   // Initialiser la voix
   Voice.initVoice(
     (text) => {
@@ -50,7 +52,7 @@ async function init() {
       document.getElementById("voiceStatus").innerText = "Dictée terminée";
     }
   );
-  
+
   bindEvents();
   Navigation.initNavigation();
 }
@@ -59,19 +61,19 @@ async function saveCurrentMeal() {
   const datetime = document.getElementById("mealDatetime").value || new Date().toISOString().slice(0, 16);
   const text = document.getElementById("mealText").value.trim();
   const photo = Camera.getCurrentPhoto();
-  
+
   if (!text && !photo) {
     alert("Décris ton repas ou prends une photo");
     return;
   }
-  
+
   const userMeds = Medications.getMeds();
   const iaResult = await IA.analyseRepas(text, photo, userMeds);
-  
+
   if (iaResult.success && iaResult.interaction) {
     UI.showAlert(iaResult.analysis, 'alertBanner');
   }
-  
+
   const newMeal = {
     id: Date.now(),
     datetime,
@@ -81,13 +83,14 @@ async function saveCurrentMeal() {
     interactionDetected: iaResult.interaction,
     iaSource: iaResult.source
   };
-  
+
   repasList.unshift(newMeal);
   Storage.saveRepas(repasList);
   UI.setRepasList(repasList);
   UI.renderMeals('mealsList');
+  Dashboard.renderDashboard('pnnsDashboard', repasList);
   UI.updateTip(IA.getRandomTip(), 'pnnsTip');
-  
+
   document.getElementById("mealText").value = "";
   Camera.clearCurrentPhoto();
   Camera.hidePreview('photoPreview');
@@ -107,14 +110,14 @@ function bindEvents() {
     document.getElementById("startVoiceBtn").disabled = false;
     document.getElementById("stopVoiceBtn").disabled = true;
   };
-  
+
   // Sauvegarde repas
   document.getElementById("saveMealBtn").onclick = saveCurrentMeal;
-  
+
   // Export
   document.getElementById("exportBtn").onclick = () => Export.exportJSON(repasList);
   document.getElementById("exportReadableBtn").onclick = () => Export.exportReadable(repasList);
-  
+
   // Effacer tout
   document.getElementById("clearAllBtn").onclick = () => {
     if (confirm("Effacer tout l'historique des repas ?")) {
@@ -122,9 +125,10 @@ function bindEvents() {
       Storage.saveRepas(repasList);
       UI.setRepasList(repasList);
       UI.renderMeals('mealsList');
+      Dashboard.renderDashboard('pnnsDashboard', repasList);
     }
   };
-  
+
   // Eau
   document.querySelectorAll(".water-btn").forEach(btn => {
     btn.onclick = () => {
@@ -145,7 +149,7 @@ function bindEvents() {
       panel.style.display = "none";
     }
   };
-  
+
   // Photo
   document.getElementById("takePhotoBtn").onclick = async () => {
     const base64 = await Camera.takePhoto();
@@ -159,7 +163,7 @@ function bindEvents() {
     Camera.clearCurrentPhoto();
     Camera.hidePreview('photoPreview');
   };
-  
+
   // Fermeture alerte
   document.getElementById("closeAlertBtn").onclick = () => {
     document.getElementById("alertBanner").style.display = "none";
