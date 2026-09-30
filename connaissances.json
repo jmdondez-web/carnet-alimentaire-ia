@@ -1,29 +1,614 @@
 {
+  "disclaimer": "Cette base est limitée et fournie à titre éducatif uniquement. Elle ne remplace pas l'avis d'un médecin ou pharmacien.",
   "interactions": [
     {
       "aliment": "pamplemousse",
-      "medicaments": ["amlodipine", "atorvastatine", "simvastatine", "nifédipine", "ciclosporine"],
-      "message": "⚠️ Le pamplemousse peut augmenter les effets secondaires de tes médicaments (tension, cholestérol). Consulte ton médecin ou pharmacien."
+      "synonymes": [
+        "pamplemousse",
+        "jus de pamplemousse",
+        "grapefruit",
+        "pomelo"
+      ],
+      "medicaments": [
+        "amlodipine",
+        "atorvastatine",
+        "simvastatine",
+        "nifédipine",
+        "nifedipine",
+        "ciclosporine",
+        "tacrolimus",
+        "felodipine",
+        "sildenafil",
+        "sertraline",
+        "carbamazépine",
+        "sirolimus"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ Le pamplemousse (et son jus) peut augmenter les effets et effets secondaires de tes médicaments (tension, cholestérol, immunosuppresseurs). Consulte ton médecin ou pharmacien."
     },
     {
       "aliment": "chou kale",
-      "medicaments": ["anticoagulant", "warfaline", "coumarine", "avk"],
-      "message": "⚠️ Les légumes verts feuillus (kale, épinards) sont riches en vitamine K, ce qui peut influencer les anticoagulants."
+      "synonymes": [
+        "chou kale",
+        "kale",
+        "épinard",
+        "epinard",
+        "épinards",
+        "epinards",
+        "brocoli",
+        "chou frisé",
+        "roquette",
+        "cresson",
+        "bette",
+        "blettes",
+        "chou de bruxelles",
+        "laitue romaine"
+      ],
+      "medicaments": [
+        "anticoagulant",
+        "warfarine",
+        "warfaline",
+        "coumarine",
+        "avk",
+        "fluindione",
+        "acenocoumarol",
+        "previscan",
+        "sintrom"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ Les légumes verts feuillus (kale, épinards, brocoli...) sont riches en vitamine K, ce qui peut diminuer l'efficacité des anticoagulants (AVK). Maintiens une consommation régulière et stable, et parles-en à ton médecin."
     },
     {
       "aliment": "réglisse",
-      "medicaments": ["diurétique", "spironolactone", "amiloride", "tension"],
-      "message": "⚠️ La réglisse peut faire baisser le potassium et interagir avec tes médicaments pour la tension."
+      "synonymes": [
+        "réglisse",
+        "reglisse",
+        "bonbon à la réglisse",
+        "pastilles de réglisse",
+        "boisson à la réglisse"
+      ],
+      "medicaments": [
+        "diurétique",
+        "diuretique",
+        "spironolactone",
+        "amiloride",
+        "hydrochlorothiazide",
+        "furosémide",
+        "furosemide",
+        "tension",
+        "antihypertenseur",
+        "digoxine"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ La réglisse peut faire baisser le potassium et interagir avec tes médicaments pour la tension ou les diurétiques. Consulte ton médecin ou pharmacien."
     },
     {
       "aliment": "alcool",
-      "medicaments": ["paracétamol", "doliprane", "antidépresseur", "sertraline"],
-      "message": "⚠️ L'alcool peut augmenter la fatigue et les effets secondaires de tes médicaments."
+      "synonymes": [
+        "alcool",
+        "vin",
+        "bière",
+        "biere",
+        "cidre",
+        "apéritif",
+        "aperitif",
+        "champagne",
+        "whisky",
+        "vodka",
+        "rhum",
+        "gin",
+        "saké",
+        "sake",
+        "pastis",
+        "liqueur",
+        "cocktail",
+        "pinte"
+      ],
+      "medicaments": [
+        "paracétamol",
+        "paracetamol",
+        "doliprane",
+        "efferalgan",
+        "daflon",
+        "antidépresseur",
+        "antidepresseur",
+        "sertraline",
+        "fluoxétine",
+        "fluoxetine",
+        "méttronidazole",
+        "metronidazole",
+        "flagyl",
+        "codéine",
+        "codeine",
+        "morphine",
+        "benzodiazépine",
+        "benzodiazepine",
+        "xanax",
+        "valium",
+        "temesta",
+        "carbamazépine",
+        "isoniazide",
+        "antabuse",
+        "disulfirame"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ L'alcool peut augmenter la fatigue et les effets secondaires de tes médicaments (et risque hépatique avec le paracétamol). Avec certains antibiotiques comme le métronidazole, l'alcool est formellement déconseillé. Consulte ton médecin ou pharmacien."
     },
     {
       "aliment": "fromage vieilli",
-      "medicaments": ["antidépresseur", "iproniazide", "imaos"],
-      "message": "⚠️ Certains fromages affinés peuvent interagir avec tes antidépresseurs (IMAOs)."
+      "synonymes": [
+        "fromage vieilli",
+        "fromage affiné",
+        "fromage fort",
+        "comté",
+        "comte",
+        "gruyère",
+        "gruyere",
+        "roquefort",
+        "camembert",
+        "brie",
+        "munster",
+        "maroilles",
+        "parmesan",
+        "cheddar",
+        "emmental",
+        "stilton",
+        "gorgonzola",
+        "bleu"
+      ],
+      "medicaments": [
+        "antidépresseur",
+        "antidepresseur",
+        "iproniazide",
+        "imaos",
+        "imao",
+        "moclobémide",
+        "moclobemide",
+        "phénelzine",
+        "tranylcypromine",
+        "sélégiline",
+        "selegiline"
+      ],
+      "gravite": "urgence-relative",
+      "message": "🚨 Attention : les fromages affinés sont riches en tyramine et peuvent provoquer une crise hypertensive avec les IMAO. Évite les fromages vieillis, ou parles-en urgemment à ton médecin."
+    },
+    {
+      "aliment": "charcuterie",
+      "synonymes": [
+        "charcuterie",
+        "salami",
+        "saucisson",
+        "jambon cru",
+        "jambon sec",
+        "chorizo",
+        "mortadelle",
+        "bacon",
+        "prosciutto",
+        "saucisse sèche",
+        "pâté",
+        "pate",
+        "terrine",
+        "cervelas"
+      ],
+      "medicaments": [
+        "imao",
+        "imaos",
+        "iproniazide",
+        "moclobémide",
+        "moclobemide",
+        "phénelzine",
+        "tranylcypromine",
+        "sélégiline",
+        "selegiline"
+      ],
+      "gravite": "urgence-relative",
+      "message": "🚨 Attention : les charcuteries fermentées sont riches en tyramine et peuvent provoquer une crise hypertensive avec les IMAO. Évite-les et consulte ton médecin."
+    },
+    {
+      "aliment": "poisson fumé",
+      "synonymes": [
+        "poisson fumé",
+        "saumon fumé",
+        "hareng fumé",
+        "maquereau fumé",
+        "truite fumée",
+        "kippers",
+        "anchois",
+        "levure",
+        "extrait de levure",
+        "sauce soja",
+        "marmite",
+        "bouillon cube fermenté"
+      ],
+      "medicaments": [
+        "imao",
+        "imaos",
+        "iproniazide",
+        "moclobémide",
+        "moclobemide",
+        "phénelzine",
+        "tranylcypromine",
+        "sélégiline",
+        "selegiline"
+      ],
+      "gravite": "urgence-relative",
+      "message": "🚨 Attention : poissons fumés, extraits de levure et sauces fermentées sont riches en tyramine — risque de crise hypertensive avec les IMAO. Évite-les et consulte ton médecin."
+    },
+    {
+      "aliment": "banane trop mûre",
+      "synonymes": [
+        "banane mûre",
+        "banane très mûre",
+        "banane trop mure",
+        "banane noircie",
+        "banane tachetée"
+      ],
+      "medicaments": [
+        "imao",
+        "imaos",
+        "iproniazide"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ Les bananes très mûres contiennent de la tyramine — à limiter avec les IMAO. Consulte ton médecin."
+    },
+    {
+      "aliment": "canneberge",
+      "synonymes": [
+        "canneberge",
+        "cranberry",
+        "jus de canneberge",
+        "airelle",
+        "jus d'airelle"
+      ],
+      "medicaments": [
+        "warfarine",
+        "warfaline",
+        "avk",
+        "anticoagulant",
+        "fluindione",
+        "acenocoumarol",
+        "previscan",
+        "sintrom"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ La canneberge (surtout en jus ou compléments) peut augmenter l'effet des anticoagulants (AVK) et le risque de saignement. Consulte ton médecin ou pharmacien."
+    },
+    {
+      "aliment": "curcuma",
+      "synonymes": [
+        "curcuma",
+        "curry",
+        "épice curcuma",
+        "curcumine",
+        "complément de curcuma"
+      ],
+      "medicaments": [
+        "anticoagulant",
+        "warfarine",
+        "warfaline",
+        "avk",
+        "aspirine",
+        "kardegic",
+        "clopidogrel",
+        "plavix",
+        "ibuprofène",
+        "ibuprofene",
+        "antidiabétique",
+        "metformine"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ Le curcuma à dose élevée (compléments) peut amplifier l'effet des anticoagulants et des antidiabétiques. Les doses culinaires normales sont sans danger."
+    },
+    {
+      "aliment": "millepertuis",
+      "synonymes": [
+        "millepertuis",
+        "st john's wort",
+        "st john wort",
+        "tisane de millepertuis"
+      ],
+      "medicaments": [
+        "antidépresseur",
+        "antidepresseur",
+        "sertraline",
+        "fluoxétine",
+        "fluoxetine",
+        "paroxétine",
+        "paroxetine",
+        "ciclosporine",
+        "digoxine",
+        "anticoagulant",
+        "warfarine",
+        "warfaline",
+        "avk",
+        "contraceptif",
+        "pilule",
+        "sildenafil"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ Le millepertuis (plante) interagit avec de nombreux médicaments : antidépresseurs (syndrome sérotoninergique), immunosuppresseurs, anticoagulants, contraceptifs. Évite sans avis médical."
+    },
+    {
+      "aliment": "thé vert",
+      "synonymes": [
+        "thé vert",
+        "the vert",
+        "thé",
+        "matcha",
+        "infusion de thé"
+      ],
+      "medicaments": [
+        "warfarine",
+        "warfaline",
+        "avk",
+        "anticoagulant"
+      ],
+      "gravite": "info",
+      "message": "ℹ️ À très forte dose, le thé vert peut réduire l'effet des anticoagulants (AVK). Une consommation normale reste sans souci."
+    },
+    {
+      "aliment": "aliments riches en potassium",
+      "synonymes": [
+        "banane",
+        "bananes",
+        "avocat",
+        "avocats",
+        "orange",
+        "oranges",
+        "légumineuses",
+        "legumineuses",
+        "lentilles",
+        "pois chiches",
+        "haricots",
+        "chips",
+        "sel de régime",
+        "sel substitué",
+        "patate douce",
+        "épinard",
+        "epinard",
+        "tomate",
+        "tomates",
+        "noix",
+        "amandes",
+        "abricot sec",
+        "pruneau"
+      ],
+      "medicaments": [
+        "iec",
+        "ramipril",
+        "lisinopril",
+        "énalapril",
+        "enalapril",
+        "périndopril",
+        "perindopril",
+        "captopril",
+        "quinapril",
+        "sartan",
+        "losartan",
+        "valsartan",
+        "candésartan",
+        "candesartan",
+        "irbésartan",
+        "irbesartan",
+        "telmisartan",
+        "spironolactone",
+        "amiloride",
+        "éplérénone",
+        "epelerenone"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ Beaucoup d'aliments riches en potassium + ton traitement (IEC/sartans/diurétiques épargneurs) peut élever le potassium sanguin (hyperkaliémie). Équilibre ton alimentation et consulte ton médecin."
+    },
+    {
+      "aliment": "réglisse végétale (bonbons)",
+      "synonymes": [
+        "bonbon à la réglisse",
+        "pastille réglisse"
+      ],
+      "medicaments": [
+        "digoxine",
+        "furosémide",
+        "furosemide"
+      ],
+      "gravite": "info",
+      "message": "ℹ️ La réglisse en grande quantité peut perturber la digoxinémie et la kaliémie. Consommation occasionnelle recommandée."
+    },
+    {
+      "aliment": "calcium (lait, produits laitiers)",
+      "synonymes": [
+        "lait",
+        "yaourt",
+        "yogourt",
+        "fromage",
+        "fromage blanc",
+        "complément de calcium",
+        "calcium",
+        "crème",
+        "laitier",
+        "produits laitiers"
+      ],
+      "medicaments": [
+        "tétracycline",
+        "tetracycline",
+        "doxycycline",
+        "cyclines",
+        "lévothyroxine",
+        "levothyroxine",
+        "levothyrox",
+        "fer",
+        "sels de fer",
+        "ciprofloxacine",
+        "ofloxacine",
+        "levofloxacine",
+        "quinolones",
+        "fer-saccharose"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ Le calcium (lait, produits laitiers, compléments) bloque l'absorption de certains antibiotiques (tétracyclines, quinolones) et de la lévothyroxine ou du fer. Espace la prise de 2h avant ou 4h après le médicament — vérifie avec ton pharmacien."
+    },
+    {
+      "aliment": "sel",
+      "synonymes": [
+        "sel",
+        "salé",
+        "sale",
+        "chips",
+        "charcuteries salées",
+        "plats préparés",
+        "soupes industrielles",
+        "soja salé",
+        "nuoc-mâm",
+        "cube de bouillon",
+        "pizza",
+        "quiche"
+      ],
+      "medicaments": [
+        "tension",
+        "antihypertenseur",
+        "ramipril",
+        "périndopril",
+        "furosémide",
+        "spironolactone",
+        "cortisone",
+        "prednisone",
+        "prednisolone"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ Tu suis un traitement pour la tension ou de la cortisone : réduis les aliments très salés (plats préparés, charcuteries, chips) — ils diminuent l'efficacité du traitement."
+    },
+    {
+      "aliment": "gluten (compléments)",
+      "synonymes": [
+        "complément de gluten",
+        "supplément protéiné blé"
+      ],
+      "medicaments": [],
+      "gravite": "info",
+      "message": "ℹ️ Pour les patients cœliaques ou intolérants au gluten, vérifie toujours la composition des plats et compléments. (Pas d'interaction médicamenteuse.)"
+    },
+    {
+      "aliment": "pistache / noix de cajou",
+      "synonymes": [
+        "pistache",
+        "noix de cajou",
+        "cajou",
+        "châtaigne",
+        "chataigne",
+        "noisette"
+      ],
+      "medicaments": [
+        "imao",
+        "imaos"
+      ],
+      "gravite": "info",
+      "message": "ℹ️ Pistaches et châtaignes contiennent un peu de tyramine ; consommation modérée acceptable, mais vérifie avec ton médecin si tu prends des IMAO."
+    },
+    {
+      "aliment": "soja",
+      "synonymes": [
+        "soja",
+        "tofu",
+        "tempeh",
+        "lait de soja",
+        "edamame",
+        "miso"
+      ],
+      "medicaments": [
+        "lévothyroxine",
+        "levothyroxine",
+        "levothyrox",
+        "tamoxifène",
+        "tamoxifene",
+        "warfarine",
+        "warfaline",
+        "avk"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ Le soja (tofu, lait de soja) peut gêner l'absorption de la lévothyroxine (espace la prise) et modifier l'effet des AVK. Consulte ton médecin ou pharmacien."
+    },
+    {
+      "aliment": "fenugrec",
+      "synonymes": [
+        "fenugrec",
+        "graines de fenugrec",
+        "complément fenugrec"
+      ],
+      "medicaments": [
+        "antidiabétique",
+        "metformine",
+        "insuline",
+        "gliclazide",
+        "warfarine",
+        "avk"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ Le fenugrec peut faire baisser la glycémie (attention si tu prends un antidiabétique ou de l'insuline) et potentialiser les anticoagulants. Demande conseil à ton médecin."
+    },
+    {
+      "aliment": "ail (compléments)",
+      "synonymes": [
+        "complément d'ail",
+        "gélule d'ail",
+        "ail en gélules",
+        "ginkgo"
+      ],
+      "medicaments": [
+        "anticoagulant",
+        "warfarine",
+        "warfaline",
+        "avk",
+        "aspirine",
+        "kardegic",
+        "saquinavir"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ Les compléments d'ail ou de ginkgo à dose élevée augmentent le risque de saignement avec les anticoagulants/antiagrégants. L'ail culinaire normal est sans danger."
+    },
+    {
+      "aliment": "café / théine",
+      "synonymes": [
+        "café",
+        "cafe",
+        "thé",
+        "the",
+        "expresso",
+        "espresso",
+        "energy drink",
+        "boisson énergisante",
+        "red bull",
+        "coca",
+        "théine"
+      ],
+      "medicaments": [
+        "théophylline",
+        "theophylline",
+        "quinolones",
+        "ciprofloxacine",
+        "énoxacine",
+        "lithium",
+        "éphédrine",
+        "pseudoéphédrine",
+        "pseudoephedrine"
+      ],
+      "gravite": "attention",
+      "message": "⚠️ La caféine amplifie les effets de certains traitements (théophylline, quinolones, lithium) : palpitations, tremblements, nervosité. Réduis café, thé et boissons énergisantes et parles-en à ton médecin."
+    },
+    {
+      "aliment": "vitamine E (compléments)",
+      "synonymes": [
+        "complément vitamine e",
+        "vitamine e"
+      ],
+      "medicaments": [
+        "anticoagulant",
+        "warfarine",
+        "avk",
+        "aspirine",
+        "kardegic",
+        "cyclosporine"
+      ],
+      "gravite": "info",
+      "message": "ℹ️ À forte dose, la vitamine E peut amplifier le risque de saignement avec les anticoagulants/antiagrégants. Les doses nutritionnelles restent sûres."
     }
   ],
   "pnns_tips": [
@@ -33,6 +618,10 @@
     "Mange du poisson au moins 2 fois par semaine 🐟",
     "Évite de trop saler, utilise des épices à la place 🌿",
     "Prends le temps de manger, à table et sans écran 😊",
-    "Les légumineuses (lentilles, pois chiches) sont excellentes pour la santé"
+    "Les légumineuses (lentilles, pois chiches) sont excellentes pour la santé",
+    "3 produits laitiers par jour (ou équivalents) 🥛",
+    "Limite la viande rouge à ~500 g/semaine et la charcuterie 🥩",
+    "Bouge au moins 30 minutes par jour 🚶",
+    "Si tu prends des médicaments au long cours, montre ton carnet alimentaire à ton médecin ou pharmacien 💬"
   ]
 }
