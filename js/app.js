@@ -67,8 +67,12 @@ async function saveCurrentMeal() {
     return;
   }
 
+  // Contexte de santé de l'utilisateur — reste sur le téléphone, envoyé le temps de la requête
   const userMeds = Medications.getMeds();
-  const iaResult = await IA.analyseRepas(text, photo, userMeds);
+  const healthConditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
+  const allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
+
+  const iaResult = await IA.analyseRepas(text, photo, userMeds, healthConditions, allergies);
 
   if (iaResult.success && iaResult.interaction) {
     UI.showAlert(iaResult.analysis, 'alertBanner');

@@ -14,17 +14,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   repasList = Storage.loadRepas();
   Medications.initMeds();
   await IA.loadKnowledgeBase();
-  
+
   // Rendu des listes
   Medications.renderMeds('medicationsList');
   renderHealthConditions();
-  
+  renderAllergies();
+
   // Interface IA
   UISettings.renderIASettingsPanel('iaSettingsPanel');
-  
+
   // Mode sombre
   PWA.initDarkMode();
-  
+
   // Branchement des événements
   bindEvents();
 });
@@ -33,21 +34,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 function renderHealthConditions() {
   const container = document.getElementById('healthList');
   if (!container) return;
-  
+
   const healthConditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
-  
+
   if (healthConditions.length === 0) {
     container.innerHTML = '<li>Aucun problème de santé enregistré</li>';
     return;
   }
-  
+
   container.innerHTML = healthConditions.map((condition, index) => `
     <li>
       <span>🩺 ${escapeHtml(condition)}</span>
       <button class="remove-med" data-index="${index}">🗑️</button>
     </li>
   `).join('');
-  
+
   document.querySelectorAll('.remove-med[data-index]').forEach(btn => {
     btn.addEventListener('click', () => {
       const idx = parseInt(btn.dataset.index);
@@ -68,6 +69,45 @@ function addHealthCondition(condition) {
   renderHealthConditions();
 }
 
+// Affichage des allergies
+function renderAllergies() {
+  const container = document.getElementById('allergiesList');
+  if (!container) return;
+
+  const allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
+
+  if (allergies.length === 0) {
+    container.innerHTML = '<li>Aucune allergie enregistrée</li>';
+    return;
+  }
+
+  container.innerHTML = allergies.map((allergie, index) => `
+    <li>
+      <span>🥜 ${escapeHtml(allergie)}</span>
+      <button class="remove-allergy" data-index="${index}">🗑️</button>
+    </li>
+  `).join('');
+
+  document.querySelectorAll('.remove-allergy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.index);
+      const allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
+      allergies.splice(idx, 1);
+      if (Storage.saveAllergies) Storage.saveAllergies(allergies);
+      renderAllergies();
+    });
+  });
+}
+
+// Ajout d'une allergie
+function addAllergy(allergie) {
+  if (!allergie.trim()) return;
+  let allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
+  allergies.push(allergie.trim());
+  if (Storage.saveAllergies) Storage.saveAllergies(allergies);
+  renderAllergies();
+}
+
 // Gestion des événements
 function bindEvents() {
   // Ajout médicament
@@ -84,7 +124,7 @@ function bindEvents() {
       }
     });
   }
-  
+
   // Ajout problème de santé
   const addHealthBtn = document.getElementById('addHealthBtn');
   if (addHealthBtn) {
@@ -94,7 +134,17 @@ function bindEvents() {
       document.getElementById('healthConditionInput').value = '';
     });
   }
-  
+
+  // Ajout allergie
+  const addAllergyBtn = document.getElementById('addAllergyBtn');
+  if (addAllergyBtn) {
+    addAllergyBtn.addEventListener('click', () => {
+      const allergie = document.getElementById('allergyInput').value.trim();
+      addAllergy(allergie);
+      document.getElementById('allergyInput').value = '';
+    });
+  }
+
   // Export
   const exportBtn = document.getElementById('exportAllDataBtn');
   if (exportBtn) {
@@ -102,19 +152,19 @@ function bindEvents() {
       Export.exportJSON(repasList);
     });
   }
-  
+
   // Effacer tout
   const clearBtn = document.getElementById('clearAllDataBtn');
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
-      if (confirm('⚠️ Effacer TOUTES les données ? (repas, eau, médicaments)\nCette action est irréversible.')) {
+      if (confirm('⚠️ Effacer TOUTES les données ? (repas, eau, médicaments, problèmes de santé, allergies)\nCette action est irréversible.')) {
         localStorage.clear();
         alert('Toutes les données ont été effacées. L\'application va redémarrer.');
         window.location.href = 'index.html';
       }
     });
   }
-  
+
   // RETOUR VERS ACCUEIL (flèche)
   const backBtn = document.getElementById('backToHomeBtn');
   if (backBtn) {
