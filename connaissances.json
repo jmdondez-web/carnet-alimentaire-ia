@@ -471,7 +471,10 @@
         "spironolactone",
         "cortisone",
         "prednisone",
-        "prednisolone"
+        "prednisolone",
+        "hypertension",
+        "hta",
+        "tension arterielle"
       ],
       "gravite": "attention",
       "message": "⚠️ Tu suis un traitement pour la tension ou de la cortisone : réduis les aliments très salés (plats préparés, charcuteries, chips) — ils diminuent l'efficacité du traitement."

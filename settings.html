@@ -42,7 +42,18 @@
         <button id="addHealthBtn" class="btn btn-secondary btn-sm">➕ Ajouter</button>
       </div>
       <ul id="healthList" class="med-list"></ul>
-      <p class="info-note">Ces informations aident l'IA à mieux contextualiser ses alertes.</p>
+      <p class="info-note">Ces informations aident l'IA à mieux contextualiser ses alertes. Ajoutez vos diagnostics pour affiner les conseils (ex: hypertension → alerte sel).</p>
+    </div>
+
+    <!-- SECTION ALLERGIES (optionnel) -->
+    <div class="settings-card">
+      <h2>🥜 Allergies & intolérances</h2>
+      <div class="med-input-group">
+        <input type="text" id="allergyInput" placeholder="Ex: arachide, gluten, lactose">
+        <button id="addAllergyBtn" class="btn btn-secondary btn-sm">➕ Ajouter</button>
+      </div>
+      <ul id="allergiesList" class="med-list"></ul>
+      <p class="info-note">Si l'aliment est détecté dans un repas, une alerte s'affiche. Toujours vérifier les étiquettes — consultez votre médecin ou pharmacien.</p>
     </div>
 
     <!-- SECTION PARAMÈTRES IA -->

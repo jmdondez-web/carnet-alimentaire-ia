@@ -5,7 +5,8 @@ export const KEYS = {
   MEDS: "carnet_medicaments",
   WATER: "carnet_eau_historique",
   DARK_MODE: "carnet_dark_mode",
-  HEALTH: "carnet_health_conditions"
+  HEALTH: "carnet_health_conditions",
+  ALLERGIES: "carnet_allergies"
 };
 
 // === REPAS ===
@@ -55,4 +56,14 @@ export function loadHealthConditions() {
 
 export function saveHealthConditions(conditions) {
   localStorage.setItem(KEYS.HEALTH, JSON.stringify(conditions));
+}
+
+// === ALLERGIES & INTOLÉRANCES ===
+export function loadAllergies() {
+  const stored = localStorage.getItem(KEYS.ALLERGIES);
+  return stored ? JSON.parse(stored) : [];
+}
+
+export function saveAllergies(allergies) {
+  localStorage.setItem(KEYS.ALLERGIES, JSON.stringify(allergies));
 }
