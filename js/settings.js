@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   Medications.renderMeds('medicationsList');
   renderHealthConditions();
   renderAllergies();
+  updateClearMedsVisibility();
 
   // Interface IA
   UISettings.renderIASettingsPanel('iaSettingsPanel');
@@ -36,6 +37,9 @@ function renderHealthConditions() {
   if (!container) return;
 
   const healthConditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
+
+  const clearBtn = document.getElementById('clearHealthBtn');
+  if (clearBtn) clearBtn.style.display = healthConditions.length > 0 ? 'inline-block' : 'none';
 
   if (healthConditions.length === 0) {
     container.innerHTML = '<li>Aucun problème de santé enregistré</li>';
@@ -76,6 +80,9 @@ function renderAllergies() {
 
   const allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
 
+  const clearBtn = document.getElementById('clearAllergiesBtn');
+  if (clearBtn) clearBtn.style.display = allergies.length > 0 ? 'inline-block' : 'none';
+
   if (allergies.length === 0) {
     container.innerHTML = '<li>Aucune allergie enregistrée</li>';
     return;
@@ -108,6 +115,37 @@ function addAllergy(allergie) {
   renderAllergies();
 }
 
+// Affiche/masque le bouton d'effacement des traitements selon le contenu
+function updateClearMedsVisibility() {
+  const clearBtn = document.getElementById('clearMedsBtn');
+  if (clearBtn) clearBtn.style.display = Medications.getMeds().length > 0 ? 'inline-block' : 'none';
+}
+
+// Effacement complet d'une liste de données santé (droit à l'effacement RGPD)
+function confirmClearList(label) {
+  return confirm(`⚠️ Effacer ${label} ?\nCette action est irréversible.`);
+}
+
+function clearMeds() {
+  if (!confirmClearList('toute la liste des traitements')) return;
+  Storage.saveMeds([]);
+  Medications.initMeds();
+  Medications.renderMeds('medicationsList');
+  updateClearMedsVisibility();
+}
+
+function clearHealthConditions() {
+  if (!confirmClearList('toute la liste des problèmes de santé')) return;
+  if (Storage.saveHealthConditions) Storage.saveHealthConditions([]);
+  renderHealthConditions();
+}
+
+function clearAllergies() {
+  if (!confirmClearList('toute la liste des allergies')) return;
+  if (Storage.saveAllergies) Storage.saveAllergies([]);
+  renderAllergies();
+}
+
 // Gestion des événements
 function bindEvents() {
   // Ajout médicament
@@ -119,6 +157,7 @@ function bindEvents() {
       if (name) {
         Medications.addMed(name, condition);
         Medications.renderMeds('medicationsList');
+        updateClearMedsVisibility();
         document.getElementById('medNameInput').value = '';
         document.getElementById('medConditionInput').value = '';
       }
@@ -144,6 +183,14 @@ function bindEvents() {
       document.getElementById('allergyInput').value = '';
     });
   }
+
+  // Effacement par liste (RGPD : droit à l'effacement ciblé)
+  const clearMedsBtn = document.getElementById('clearMedsBtn');
+  if (clearMedsBtn) clearMedsBtn.addEventListener('click', clearMeds);
+  const clearHealthBtn = document.getElementById('clearHealthBtn');
+  if (clearHealthBtn) clearHealthBtn.addEventListener('click', clearHealthConditions);
+  const clearAllergiesBtn = document.getElementById('clearAllergiesBtn');
+  if (clearAllergiesBtn) clearAllergiesBtn.addEventListener('click', clearAllergies);
 
   // Export
   const exportBtn = document.getElementById('exportAllDataBtn');
