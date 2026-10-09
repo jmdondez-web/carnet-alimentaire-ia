@@ -5,6 +5,7 @@ import * as Export from './export.js';
 import * as UISettings from './ui-settings.js';
 import * as IA from './ia.js';
 import * as PWA from './pwa.js';
+import { revokeConsent, getConsentDate } from './consent.js';
 
 let repasList = [];
 
@@ -59,7 +60,8 @@ function renderHealthConditions() {
       const conditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
       conditions.splice(idx, 1);
       if (Storage.saveHealthConditions) Storage.saveHealthConditions(conditions);
-      renderHealthConditions();
+      renderHealthConditio
+ns();
     });
   });
 }
@@ -121,7 +123,8 @@ function updateClearMedsVisibility() {
   if (clearBtn) clearBtn.style.display = Medications.getMeds().length > 0 ? 'inline-block' : 'none';
 }
 
-// Effacement complet d'une liste de données santé (droit à l'effacement RGPD)
+// Ef
+facement complet d'une liste de données santé (droit à l'effacement RGPD)
 function confirmClearList(label) {
   return confirm(`⚠️ Effacer ${label} ?\nCette action est irréversible.`);
 }
@@ -144,6 +147,27 @@ function clearAllergies() {
   if (!confirmClearList('toute la liste des allergies')) return;
   if (Storage.saveAllergies) Storage.saveAllergies([]);
   renderAllergies();
+}
+
+// Effacement de l'historique des repas (les données d'eau restent)
+function clearMealsHistory() {
+  if (!confirmClearList("tout l'historique des repas")) return;
+  Storage.saveRepas([]);
+  repasList = [];
+  alert('Historique des repas effacé.');
+}
+
+// Révocation du consentement IA externe (RGPD : révocable à tout moment)
+function revokeExternalConsent() {
+  const consentDate = getConsentDate();
+  const when = consentDate ? ` (donné le ${new Date(consentDate).toLocaleString()})` : '';
+  if (!confirm(`⚠️ Révoquer le consentement IA externe${when} ?\nLe mode IA externe sera désactivé et reviendra au mode local. Aucune donnée ne quitte plus ton téléphone.`)) return;
+  revokeConsent();
+  import('./ia-settings.js').then(m => {
+    m.updateIASetting('mode', 'local');
+    UISettings.renderIASettingsPanel('iaSettingsPanel');
+    alert('Consentement révoqué. Mode IA externe désactivé.');
+  });
 }
 
 // Gestion des événements
@@ -178,7 +202,8 @@ function bindEvents() {
   const addAllergyBtn = document.getElementById('addAllergyBtn');
   if (addAllergyBtn) {
     addAllergyBtn.addEventListener('click', () => {
-      const allergie = document.getElementById('allergyInput').value.trim();
+      const allergie = document.
+getElementById('allergyInput').value.trim();
       addAllergy(allergie);
       document.getElementById('allergyInput').value = '';
     });
@@ -191,6 +216,12 @@ function bindEvents() {
   if (clearHealthBtn) clearHealthBtn.addEventListener('click', clearHealthConditions);
   const clearAllergiesBtn = document.getElementById('clearAllergiesBtn');
   if (clearAllergiesBtn) clearAllergiesBtn.addEventListener('click', clearAllergies);
+
+  // Historique des repas + consentement IA
+  const clearMealsBtn = document.getElementById('clearMealsHistoryBtn');
+  if (clearMealsBtn) clearMealsBtn.addEventListener('click', clearMealsHistory);
+  const revokeConsentBtn = document.getElementById('revokeConsentBtn');
+  if (revokeConsentBtn) revokeConsentBtn.addEventListener('click', revokeExternalConsent);
 
   // Export
   const exportBtn = document.getElementById('exportAllDataBtn');
