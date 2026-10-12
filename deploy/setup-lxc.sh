@@ -14,13 +14,20 @@ apt-get update && apt-get upgrade -y
 apt-get install -y python3 python3-venv python3-pip git nginx curl ufw
 
 echo "📁 Récupération du code"
-mkdir -p "$APP_DIR"
-git clone "$REPO_URL" "$APP_DIR"
+if [ -d "$APP_DIR/.git" ]; then
+    git -C "$APP_DIR" pull --ff-only
+else
+    rm -rf "$APP_DIR"
+    git clone "$REPO_URL" "$APP_DIR"
+fi
 # Les scripts de déploiement sont dans deploy/
-cp -r "$APP_DIR/deploy/api" "$APP_DIR/api" 2>/dev/null || true
+rm -rf "$APP_DIR/api"
+cp -r "$APP_DIR/deploy/api" "$APP_DIR/api"
 
 echo "🐍 Environnement Python"
-python3 -m venv /opt/venv
+if [ ! -d /opt/venv ]; then
+    python3 -m venv /opt/venv
+fi
 /opt/venv/bin/pip install --upgrade pip
 /opt/venv/bin/pip install fastapi "uvicorn[standard]"
 
@@ -45,6 +52,8 @@ systemctl daemon-reload
 systemctl enable --now carnet-api
 
 echo "🌐 Nginx reverse proxy"
+# NB : heredoc quoté (<<'EOF') -> bash n'interpole PAS les variables,
+# les $ de Nginx doivent être écrits sans backslash.
 cat > /etc/nginx/sites-available/carnet <<'EOF'
 server {
     listen 80;
@@ -56,16 +65,16 @@ server {
     root /opt/carnet-alimentaire;
     index index.html;
     location / {
-        try_files \$uri \$uri/ =404;
+        try_files $uri $uri/ =404;
     }
 
     # API
     location /api/ {
         proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 EOF
