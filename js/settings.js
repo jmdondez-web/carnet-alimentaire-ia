@@ -231,6 +231,35 @@ getElementById('allergyInput').value.trim();
     });
   }
 
+  // Import (fusion d'un export JSON — migration d'appareil/origine)
+  const importBtn = document.getElementById('importDataBtn');
+  const importInput = document.getElementById('importFileInput');
+  if (importBtn && importInput) {
+    importBtn.addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', async () => {
+      const file = importInput.files && importInput.files[0];
+      if (!file) return;
+      if (!confirm('Importer ce fichier ?\nLes données seront fusionnées avec les données actuelles (aucune donnée existante ne sera écrasée).')) {
+        importInput.value = '';
+        return;
+      }
+      try {
+        const res = await Export.importJSON(file);
+        // Rafraîchissement complet de l'état local et de l'affichage
+        repasList = Storage.loadRepas();
+        Medications.initMeds();
+        Medications.renderMeds('medicationsList');
+        renderHealthConditions();
+        renderAllergies();
+        updateClearMedsVisibility();
+        alert(`✅ Import terminé.\nRepas ajoutés : ${res.repas}\nFichier du : ${file.name}`);
+      } catch (e) {
+        alert('❌ Import échoué : ' + e.message);
+      }
+      importInput.value = '';
+    });
+  }
+
   // Effacer tout
   const clearBtn = document.getElementById('clearAllDataBtn');
   if (clearBtn) {

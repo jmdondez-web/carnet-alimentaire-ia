@@ -75,6 +75,10 @@ e des problèmes de santé</button>
         <button id="exportAllDataBtn" class="btn btn-secondary btn-sm">
           📎 Exporter toutes les données
         </button>
+        <button id="importDataBtn" class="btn btn-secondary btn-sm">
+          📂 Importer des données (JSON)
+        </button>
+        <input type="file" id="importFileInput" accept="application/json,.json" style="display:none;">
         <button id="clearMealsHistoryBtn" class="btn btn-danger btn-sm">
           🍽️ Effacer l'historique des repas
         </button>
@@ -85,7 +89,7 @@ e des problèmes de santé</button>
           🗑️ Effacer toutes les données
         </button>
       </div>
-      <p class="info-note">L'effacement de l'historique ne touche ni l'eau ni les listes de santé. La révocation du consentement désactive l'IA externe (retour au mode local). « Effacer toutes les données » supprime tout (repas, eau, traitements, problèmes de santé, allergies, consentement) — action irréversible.</p>
+      <p class="info-note">L'effacement de l'historique ne touche ni l'eau ni les listes de santé. La révocation du consentement désactive l'IA externe (retour au mode local). « Importer » fusionne un export JSON avec les données actuelles (utile pour migrer d'un autre appareil). « Effacer toutes les données » supprime tout (repas, eau, traitements, problèmes de santé, allergies, consentement) — action irréversible.</p>
     </div>
 
     <!-- FOOTER -->
