@@ -10,8 +10,17 @@ import * as PWA from './pwa.js';
 import * as Navigation from './navigation.js';
 import * as UISettings from './ui-settings.js';
 import * as Dashboard from './dashboard.js';
+import * as MealModes from './meal-modes.js';
 
 let repasList = [];
+
+function refreshHome() {
+  repasList = Storage.loadRepas();
+  UI.setRepasList(repasList);
+  UI.renderMeals('mealsList');
+  Dashboard.renderDashboard('pnnsDashboard', repasList);
+  UI.updateTip(IA.getRandomTip(), 'pnnsTip');
+}
 
 async function init() {
   // Charger les données
@@ -28,6 +37,9 @@ async function init() {
   UI.updateTip(IA.getRandomTip(), 'pnnsTip');
   UISettings.showIAModeIndicator('iaModeIndicator');
 
+  // Modes de repas (sur le pouce / à table) — enregistrement immédiat, analyse différée
+  MealModes.initMealModes(refreshHome);
+
   // PWA + mode sombre
   PWA.registerServiceWorker();
   PWA.initDarkMode();
@@ -36,6 +48,16 @@ async function init() {
   const now = new Date();
   const localNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   document.getElementById("mealDatetime").value = localNow;
+
+  // Raccourcis PWA (appui long sur l'icône) : ?action=add / ?action=water
+  const action = new URLSearchParams(window.location.search).get('action');
+  if (action === 'add') {
+    setTimeout(() => document.getElementById('detailed-meal-section').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+  } else if (action === 'water') {
+    Water.addWater(33);
+    Water.updateWaterUI('waterTotal', 'waterProgress');
+    UI.showToast('33 cl ajoutés 💧');
+  }
 
   // Initialiser la voix
   Voice.initVoice(
@@ -63,29 +85,18 @@ async function saveCurrentMeal() {
   const photo = Camera.getCurrentPhoto();
 
   if (!text && !photo) {
-    alert("Décris ton repas ou prends une photo");
+    UI.showToast("Décris ton repas ou prends une photo");
     return;
   }
 
-  // Contexte de santé de l'utilisateur — reste sur le téléphone, envoyé le temps de la requête
-  const userMeds = Medications.getMeds();
-  const healthConditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
-  const allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
-
-  const iaResult = await IA.analyseRepas(text, photo, userMeds, healthConditions, allergies);
-
-  if (iaResult.success && iaResult.interaction) {
-    UI.showAlert(iaResult.analysis, 'alertBanner');
-  }
-
+  // 1. Enregistrer immédiatement — l'utilisateur n'attend pas l'analyse
   const newMeal = {
     id: Date.now(),
     datetime,
     text: text || "(photo)",
     photo,
     createdAt: new Date().toISOString(),
-    interactionDetected: iaResult.interaction,
-    iaSource: iaResult.source
+    iaSource: 'local'
   };
 
   repasList.unshift(newMeal);
@@ -93,11 +104,40 @@ async function saveCurrentMeal() {
   UI.setRepasList(repasList);
   UI.renderMeals('mealsList');
   Dashboard.renderDashboard('pnnsDashboard', repasList);
+  UI.showToast('Repas ajouté ✓');
   UI.updateTip(IA.getRandomTip(), 'pnnsTip');
 
   document.getElementById("mealText").value = "";
   Camera.clearCurrentPhoto();
   Camera.hidePreview('photoPreview');
+
+  // 2. Analyser en arrière-plan — l'alerte s'affiche quand elle arrive
+  analyseInBackground(newMeal);
+}
+
+async function analyseInBackground(meal) {
+  const userMeds = Medications.getMeds();
+  const healthConditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
+  const allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
+
+  try {
+    const iaResult = await IA.analyseRepas(meal.text, meal.photo, userMeds, healthConditions, allergies);
+    if (iaResult.success && iaResult.interaction) {
+      meal.interactionDetected = iaResult.interaction;
+      meal.iaSource = iaResult.source;
+      const list = Storage.loadRepas();
+      const idx = list.findIndex(m => m.id === meal.id);
+      if (idx !== -1) {
+        list[idx] = meal;
+        Storage.saveRepas(list);
+      }
+      UI.setRepasList(list);
+      UI.renderMeals('mealsList');
+      UI.showAlert(iaResult.analysis, 'alertBanner');
+    }
+  } catch(e) {
+    console.error("Analyse arrière-plan:", e);
+  }
 }
 
 function bindEvents() {

@@ -6,7 +6,8 @@ export const KEYS = {
   WATER: "carnet_eau_historique",
   DARK_MODE: "carnet_dark_mode",
   HEALTH: "carnet_health_conditions",
-  ALLERGIES: "carnet_allergies"
+  ALLERGIES: "carnet_allergies",
+  REPAS_DRAFT: "carnet_repas_draft"
 };
 
 // === REPAS ===
@@ -17,6 +18,20 @@ export function loadRepas() {
 
 export function saveRepas(repas) {
   localStorage.setItem(KEYS.REPAS, JSON.stringify(repas));
+}
+
+// === BROUILLON REPAS EN COURS (mode à table) ===
+export function loadRepasDraft() {
+  const stored = localStorage.getItem(KEYS.REPAS_DRAFT);
+  return stored ? JSON.parse(stored) : { items: [] };
+}
+
+export function saveRepasDraft(draft) {
+  localStorage.setItem(KEYS.REPAS_DRAFT, JSON.stringify(draft));
+}
+
+export function clearRepasDraft() {
+  localStorage.removeItem(KEYS.REPAS_DRAFT);
 }
 
 // === MÉDICAMENTS ===
