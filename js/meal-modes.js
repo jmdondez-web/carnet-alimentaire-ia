@@ -1,10 +1,7 @@
 // ========== MODES DE REPAS (sur le pouce / à table) ==========
-import { saveRepasDraft, loadRepasDraft, clearRepasDraft } from './storage.js';
+import { saveRepasDraft, loadRepasDraft } from './storage.js';
 import * as Storage from './storage.js';
-import * as Medications from './medications.js';
-import * as IA from './ia.js';
 import * as UI from './ui.js';
-import * as Dashboard from './dashboard.js';
 
 const DEFAULT_QUICK_MEALS = [
   { label: "☕ Petit-déj", text: "Petit-déjeuner : café, pain, beurre, confiture" },
@@ -16,13 +13,13 @@ const DEFAULT_QUICK_MEALS = [
 ];
 
 let currentMode = null;
-let onMealSaved = null; // callback pour rafraîchir l'accueil
 
-export function initMealModes(callback) {
-  onMealSaved = callback;
+// Initialise les modes. onQuickMeal(mealText) est appelé quand une chip est tapée
+// (le reste — enregistrement, analyse — reste géré par app.js, un seul flux).
+export function initMealModes(onQuickMeal) {
   currentMode = loadMode();
 
-  // Bascule des modes
+  // Bascule des modes — le mode détermine la seule section d'encodage visible
   document.querySelectorAll('.mode-switch button').forEach(btn => {
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode;
@@ -40,32 +37,26 @@ export function initMealModes(callback) {
     chipsWrap.querySelectorAll('.chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const meal = getQuickMeals()[parseInt(chip.dataset.i)];
-        saveQuickMeal(meal);
+        onQuickMeal(meal);
       });
     });
   }
 
-  // Bouton décrire mon repas → écran ajout existant
-  const describeBtn = document.getElementById('describeMealBtn');
-  if (describeBtn) describeBtn.addEventListener('click', () => {
-    document.getElementById('mealText').focus();
-    document.getElementById('mealText').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
+  // Mode à table : brouillon texte persistant (survit à la fermeture de l'appli)
+  const textArea = document.getElementById('mealText');
+  if (textArea) {
+    textArea.addEventListener('input', () => {
+      const draft = loadRepasDraft();
+      draft.text = textArea.value;
+      saveRepasDraft(draft);
+    });
+    const draft = loadRepasDraft();
+    if (draft.text) {
+      textArea.value = draft.text;
+      if (currentMode === 'lent') UI.showToast && UI.showToast('Brouillon restauré 🍽️');
+    }
+  }
 
-  // Mode à table : ajout plat par plat
-  const addItemBtn = document.getElementById('tableAddItemBtn');
-  if (addItemBtn) addItemBtn.addEventListener('click', addTableItem);
-  const itemInput = document.getElementById('tableItemInput');
-  if (itemInput) itemInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); addTableItem(); }
-  });
-
-  // Terminer le repas (mode à table)
-  const finishBtn = document.getElementById('finishTableMealBtn');
-  if (finishBtn) finishBtn.addEventListener('click', finishTableMeal);
-
-  // Restauration d'un brouillon éventuel
-  restoreDraft();
   setMode(currentMode || 'pouce');
 }
 
@@ -90,133 +81,17 @@ function setMode(mode) {
   document.querySelectorAll('.mode-switch button').forEach(b =>
     b.classList.toggle('on', b.dataset.mode === mode)
   );
+  // Une seule zone d'encodage visible : chips (pouce) OU formulaire détaillé (à table)
   const quick = document.getElementById('quick-zone');
-  const table = document.getElementById('table-zone');
+  const detailed = document.getElementById('detailed-meal-section');
   if (quick) quick.style.display = mode === 'pouce' ? 'block' : 'none';
-  if (table) table.style.display = mode === 'lent' ? 'block' : 'none';
-}
-
-// ---- Mode sur le pouce : repas chip → enregistrement immédiat, analyse différée ----
-function saveQuickMeal(meal) {
-  const datetime = new Date().toISOString().slice(0, 16);
-  const newMeal = {
-    id: Date.now(),
-    datetime,
-    text: meal.text,
-    photo: null,
-    createdAt: new Date().toISOString(),
-    iaSource: 'local'
-  };
-  persistAndAnalyse(newMeal);
-  UI.showToast && UI.showToast(`Repas ajouté ✓ ${meal.label}`);
-}
-
-// ---- Mode à table : plat par plat, brouillon persistant ----
-function addTableItem() {
-  const input = document.getElementById('tableItemInput');
-  if (!input) return;
-  const v = input.value.trim();
-  if (!v) return;
-  const draft = loadRepasDraft();
-  draft.items = draft.items || [];
-  draft.items.push(v);
-  saveRepasDraft(draft);
-  input.value = '';
-  renderTableItems();
-  UI.showToast && UI.showToast(`Ajouté : ${v}`);
-}
-
-function removeTableItem(index) {
-  const draft = loadRepasDraft();
-  draft.items = (draft.items || []);
-  draft.items.splice(index, 1);
-  saveRepasDraft(draft);
-  renderTableItems();
-}
-
-function renderTableItems() {
-  const ul = document.getElementById('tableItems');
-  if (!ul) return;
-  const draft = loadRepasDraft();
-  const items = draft.items || [];
-  ul.innerHTML = items.length === 0
-    ? '<li style="color:var(--muted)">Aucun plat pour l\'instant</li>'
-    : items.map((it, i) => `<li><span>🍽️ ${escapeHtml(it)}</span><button data-i="${i}">✕</button></li>`).join('');
-  ul.querySelectorAll('button').forEach(btn =>
-    btn.addEventListener('click', () => removeTableItem(parseInt(btn.dataset.i)))
-  );
-}
-
-function restoreDraft() {
-  renderTableItems();
-  const draft = loadRepasDraft();
-  if (draft.items && draft.items.length > 0) {
-    UI.showToast && UI.showToast('Repas en cours restauré 🍽️');
+  if (detailed) detailed.style.display = mode === 'lent' ? 'block' : 'none';
+  if (mode === 'lent') {
+    const ta = document.getElementById('mealText');
+    if (ta) ta.focus();
   }
 }
 
-function finishTableMeal() {
-  const draft = loadRepasDraft();
-  const items = draft.items || [];
-  if (items.length === 0) {
-    UI.showToast && UI.showToast('Ajoute au moins un plat');
-    return;
-  }
-  const newMeal = {
-    id: Date.now(),
-    datetime: new Date().toISOString().slice(0, 16),
-    text: items.join(', '),
-    photo: null,
-    createdAt: new Date().toISOString(),
-    iaSource: 'local'
-  };
-  clearRepasDraft();
-  renderTableItems();
-  persistAndAnalyse(newMeal);
-  UI.showToast && UI.showToast('Repas ajouté ✓');
-}
-
-// ---- Enregistrement immédiat + analyse en arrière-plan (les deux modes) ----
-async function persistAndAnalyse(newMeal) {
-  // 1. Enregistrer tout de suite
-  const repasList = Storage.loadRepas();
-  repasList.unshift(newMeal);
-  Storage.saveRepas(repasList);
-
-  // Rafraîchir l'UI sans attendre l'analyse
-  if (onMealSaved) onMealSaved(newMeal);
-
-  // 2. Lancer l'analyse en arrière-plan
-  const userMeds = Medications.getMeds();
-  const healthConditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
-  const allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
-
-  try {
-    const result = await IA.analyseRepas(newMeal.text, newMeal.photo, userMeds, healthConditions, allergies);
-    if (result.success && result.interaction) {
-      newMeal.interactionDetected = result.interaction;
-      newMeal.iaSource = result.source;
-      // Re-sauvegarder avec le résultat
-      const list = Storage.loadRepas();
-      const idx = list.findIndex(m => m.id === newMeal.id);
-      if (idx !== -1) {
-        list[idx] = newMeal;
-        Storage.saveRepas(list);
-      }
-      UI.showAlert(result.analysis, 'alertBanner');
-      if (onMealSaved) onMealSaved(newMeal);
-    }
-  } catch(e) {
-    console.error('Analyse arrière-plan:', e);
-  }
-}
-
-function escapeHtml(str) {
-  if (!str) return "";
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === "&") return "&amp;";
-    if (m === "<") return "&lt;";
-    if (m === ">") return "&gt;";
-    return m;
-  });
+export function getCurrentMode() {
+  return currentMode;
 }
