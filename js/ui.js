@@ -40,6 +40,20 @@ export function updateTip(tip, containerId) {
   if (tipElem) tipElem.innerText = tip;
 }
 
+// Toast discret (remplace les alert() de confirmation)
+export function showToast(message) {
+  let toast = document.getElementById('uiToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'uiToast';
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a2b1a;color:#fff;padding:12px 22px;border-radius:24px;font-size:14px;z-index:9999;transition:transform .3s;max-width:85%;text-align:center;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  requestAnimationFrame(() => { toast.style.transform = 'translateX(-50%) translateY(0)'; });
+  setTimeout(() => { toast.style.transform = 'translateX(-50%) translateY(80px)'; }, 2000);
+}
+
 function escapeHtml(str) {
   if (!str) return "";
   return str.replace(/[&<>]/g, function(m) {

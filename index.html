@@ -55,9 +55,36 @@
       <div id="waterHistoryPanel" style="display:none;" class="history-panel"></div>
     </div>
 
-    <!-- AJOUT REPAS -->
+    <!-- MODES DE REPAS -->
     <div class="add-section">
       <h2>🍽️ Ajouter un repas</h2>
+      <div class="mode-switch">
+        <button class="on" data-mode="pouce">⚡ Sur le pouce</button>
+        <button data-mode="lent">🍽️ Repas à table</button>
+      </div>
+
+      <!-- Sur le pouce : chips + description -->
+      <div id="quick-zone">
+        <p class="mode-hint">Tapote un repas habituel, ou décris-le :</p>
+        <div class="chips" id="quickChips"></div>
+        <button id="describeMealBtn" class="btn btn-primary btn-block">✏️ Décrire mon repas en détail</button>
+      </div>
+
+      <!-- À table : plat par plat -->
+      <div id="table-zone" style="display:none;">
+        <p class="mode-hint">Repas en cours — ajoute chaque plat au fur et à mesure :</p>
+        <div class="table-addrow">
+          <input type="text" id="tableItemInput" placeholder="Ex : velouté de courgettes…">
+          <button id="tableAddItemBtn" class="btn btn-secondary">➕</button>
+        </div>
+        <ul id="tableItems" class="table-list"></ul>
+        <button id="finishTableMealBtn" class="btn btn-primary btn-block">✅ Terminer le repas</button>
+        <p class="mode-hint small">Le repas reste ouvert tant que tu ne le clôtures pas — même si tu quittes l'appli.</p>
+      </div>
+    </div>
+
+    <!-- AJOUT REPAS DÉTAILLÉ (commun) -->
+    <div class="add-section" id="detailed-meal-section">
       <label>📅 Date & heure</label>
       <input type="datetime-local" id="mealDatetime">
       <label>✏️ Description</label>
