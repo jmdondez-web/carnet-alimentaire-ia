@@ -37,24 +37,26 @@ async function init() {
   UI.updateTip(IA.getRandomTip(), 'pnnsTip');
   UISettings.showIAModeIndicator('iaModeIndicator');
 
-  // Modes de repas (sur le pouce / à table) — enregistrement immédiat, analyse différée
-  MealModes.initMealModes(refreshHome);
+  // Modes de repas : chips (sur le pouce) → même flux d'enregistrement que le formulaire
+  MealModes.initMealModes((quickMeal) => saveQuickMeal(quickMeal));
 
   // PWA + mode sombre
   PWA.registerServiceWorker();
   PWA.initDarkMode();
 
-  // Date par défaut
+  // Date par défaut (champ replié dans « Date & heure »)
   const now = new Date();
   const localNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  document.getElementById("mealDatetime").value = localNow;
+  const dtInput = document.getElementById("mealDatetime");
+  if (dtInput) dtInput.value = localNow;
 
   // Raccourcis PWA (appui long sur l'icône) : ?action=add / ?action=water
   const action = new URLSearchParams(window.location.search).get('action');
   if (action === 'add') {
     setTimeout(() => document.getElementById('detailed-meal-section').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
   } else if (action === 'water') {
-    Water.addWater(33);
+    Water
+.addWater(33);
     Water.updateWaterUI('waterTotal', 'waterProgress');
     UI.showToast('33 cl ajoutés 💧');
   }
@@ -108,6 +110,7 @@ async function saveCurrentMeal() {
   UI.updateTip(IA.getRandomTip(), 'pnnsTip');
 
   document.getElementById("mealText").value = "";
+  Storage.clearRepasDraft(); // le brouillon à table est consommé
   Camera.clearCurrentPhoto();
   Camera.hidePreview('photoPreview');
 
@@ -115,10 +118,31 @@ async function saveCurrentMeal() {
   analyseInBackground(newMeal);
 }
 
+// Chip « sur le pouce » : même flux, sans photo ni formulaire
+function saveQuickMeal(meal) {
+  const newMeal = {
+    id: Date.now(),
+    datetime: new Date().toISOString().slice(0, 16),
+    text: meal.text,
+    photo: null,
+    createdAt: new Date().toISOString(),
+    iaSource: 'local'
+  };
+  repasList.unshift(newMeal);
+  Storage.saveRepas(repasList);
+  UI.setRepasList(repasList);
+  UI.renderMeals('mealsList');
+  Dashboard.renderDashboard('pnnsDashboard', repasList);
+  UI.showToast(`Repas ajouté ✓ ${meal.label}`);
+  UI.updateTip(IA.getRandomTip(), 'pnnsTip');
+  analyseInBackground(newMeal);
+}
+
 async function analyseInBackground(meal) {
   const userMeds = Medications.getMeds();
   const healthConditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
-  const allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
+  const allergies = Storage.lo
+adAllergies ? Storage.loadAllergies() : [];
 
   try {
     const iaResult = await IA.analyseRepas(meal.text, meal.photo, userMeds, healthConditions, allergies);
@@ -177,6 +201,7 @@ function bindEvents() {
   document.querySelectorAll(".water-btn").forEach(btn => {
     btn.onclick = () => {
       Water.addWater(parseInt(btn.dataset.cl));
+
       Water.updateWaterUI('waterTotal', 'waterProgress');
     };
   });

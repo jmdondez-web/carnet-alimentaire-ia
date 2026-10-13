@@ -10,7 +10,7 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- HEADER AVEC NAVIGATION -->
+    <!-- HEADER -->
     <header class="main-header">
       <div class="header-title">
         <h1>📘 Carnet Alimentaire</h1>
@@ -28,7 +28,7 @@
       <div id="pnnsDashboard"></div>
     </div>
 
-    <!-- SECTION EAU -->
+    <!-- SECTION EAU (condensée) -->
     <div class="water-section">
       <h2>💧 Suivi d'eau</h2>
       <div class="water-buttons">
@@ -46,71 +46,59 @@
         <span>Aujourd'hui : </span>
         <strong id="waterTotal">0</strong> <span>cl</span>
         <button id="resetWaterBtn" class="small-btn reset-water">↺</button>
+        <button id="waterHistoryBtn" class="link-btn">📊</button>
       </div>
       <div class="water-goal">
         <progress id="waterProgress" value="0" max="150"></progress>
-        <small>Objectif PNNS : ~150 cl/jour (1.5L)</small>
       </div>
-      <button id="waterHistoryBtn" class="link-btn">📊 Historique</button>
       <div id="waterHistoryPanel" style="display:none;" class="history-panel"></div>
     </div>
 
-    <!-- MODES DE REPAS -->
+    <!-- AJOUT REPAS : une seule zone d'encodage visible selon le mode -->
     <div class="add-section">
       <h2>🍽️ Ajouter un repas</h2>
       <div class="mode-switch">
         <button class="on" data-mode="pouce">⚡ Sur le pouce</button>
-        <button data-mode="lent">🍽️ Repas à table</button>
+        <button data-mode="lent">🍽️ À table</button>
       </div>
 
-      <!-- Sur le pouce : chips + description -->
+      <!-- Pouce : chips uniquement -->
       <div id="quick-zone">
-        <p class="mode-hint">Tapote un repas habituel, ou décris-le :</p>
         <div class="chips" id="quickChips"></div>
-        <button id="describeMealBtn" class="btn btn-primary btn-block">✏️ Décrire mon repas en détail</button>
+        <p class="mode-hint small">Un tap = repas enregistré. Pour détailler, passe en mode « À table ».</p>
       </div>
 
-      <!-- À table : plat par plat -->
-      <div id="table-zone" style="display:none;">
-        <p class="mode-hint">Repas en cours — ajoute chaque plat au fur et à mesure :</p>
-        <div class="table-addrow">
-          <input type="text" id="tableItemInput" placeholder="Ex : velouté de courgettes…">
-          <button id="tableAddItemBtn" class="btn btn-secondary">➕</button>
+      <!-- À table : formulaire détaillé (brouillon conservé si tu quittes l'appli) -->
+      <div id="detailed-meal-section" style="display:none;">
+        <label>✏️ Description</label>
+        <textarea id="mealText" placeholder="Ex: Salade de lentilles, pamplemousse, riz"></textarea>
+        <div class="voice-row">
+          <button id="startVoiceBtn" class="btn btn-secondary">
+            <span class="btn-emoji">🎤</span> Dictée vocale
+          </button>
+          <button id="stopVoiceBtn" class="btn btn-outline" disabled>⏹️ Arrêter</button>
         </div>
-        <ul id="tableItems" class="table-list"></ul>
-        <button id="finishTableMealBtn" class="btn btn-primary btn-block">✅ Terminer le repas</button>
-        <p class="mode-hint small">Le repas reste ouvert tant que tu ne le clôtures pas — même si tu quittes l'appli.</p>
-      </div>
-    </div>
-
-    <!-- AJOUT REPAS DÉTAILLÉ (commun) -->
-    <div class="add-section" id="detailed-meal-section">
-      <label>📅 Date & heure</label>
-      <input type="datetime-local" id="mealDatetime">
-      <label>✏️ Description</label>
-      <textarea id="mealText" placeholder="Ex: Salade de lentilles, pamplemousse, riz"></textarea>
-      <div class="voice-row">
-        <button id="startVoiceBtn" class="btn btn-secondary">
-          <span class="btn-emoji">🎤</span> Dictée vocale
-        </button>
-        <button id="stopVoiceBtn" class="btn btn-outline" disabled>⏹️ Arrêter</button>
-      </div>
-      <p id="voiceStatus" class="voice-status"></p>
-      <div class="photo-row">
-        <button id="takePhotoBtn" class="btn btn-secondary">
-          <span class="btn-emoji">📷</span> Photo
-        </button>
-        <button id="uploadPhotoBtn" class="btn btn-secondary">
-          <span class="btn-emoji">🖼️</span> Galerie
+        <p id="voiceStatus" class="voice-status"></p>
+        <div class="photo-row">
+          <button id="takePhotoBtn" class="btn btn-secondary">
+            <span class="btn-emoji">📷</span> Photo
+          </button>
+          <button id="uploadPhotoBtn" class="btn btn-secondary">
+            <span class="btn-emoji">🖼️</span> Galerie
+          </button>
+        </div>
+        <div id="photoPreview" class="photo-preview" style="display:none;">
+          <img id="previewImg" alt="Aperçu">
+          <button id="removePhotoBtn" class="remove-photo">✖️</button>
+        </div>
+        <details class="datetime-fold">
+          <summary>📅 Date & heure : maintenant (modifier)</summary>
+          <input type="datetime-local" id="mealDatetime">
+        </details>
+        <button id="saveMealBtn" class="btn btn-primary btn-block">
+          <span class="btn-emoji">💾</span> Enregistrer
         </button>
       </div>
-      <div id="photoPreview" class="photo-preview" style="display:none;">
-        <img id="previewImg" alt="Aperçu">
-        <button id="removePhotoBtn" class="remove-photo">✖️</button>
-      </div>
-      <button id="saveMealBtn" class="btn btn-primary btn-block">
-        <span class="btn-emoji">💾</span> Enregistrer
-      </button>
     </div>
 
     <!-- ALERTE IA -->

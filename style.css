@@ -110,6 +110,7 @@ body {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   box-shadow: var(--shadow);
+
 }
 
 .btn-primary:active {
@@ -238,7 +239,8 @@ progress::-webkit-progress-bar {
 }
 
 progress::-webkit-progress-value {
-  background-color: var(--secondary);
+  background-color: var(--seco
+ndary);
   border-radius: 20px;
 }
 
@@ -363,7 +365,8 @@ input:focus, textarea:focus {
 .icon-small-btn {
   background: var(--primary-light);
   border: none;
-  width: 40px;
+  wid
+th: 40px;
   height: 40px;
   border-radius: 50%;
   font-size: 1.2rem;
@@ -494,7 +497,8 @@ li {
   margin-top: 8px;
 }
 
-/* INDICATEUR IA */
+/* INDICATEUR IA
+ */
 .ia-mode-indicator-container {
   margin-bottom: 20px;
 }
@@ -621,7 +625,8 @@ li {
   color: #5a6b5a;
 }
 .mode-switch button.on {
-  background: #2E7D32;
+  background: #2
+E7D32;
   color: #fff;
   font-weight: 600;
 }
@@ -661,3 +666,8 @@ li {
   font-size: 15px;
 }
 .table-list li button { border: 0; background: transparent; cursor: pointer; font-size: 14px; color: #5a6b5a; }
+
+/* ========== v3 : un seul encodage visible ========== */
+.datetime-fold { margin: 10px 0; font-size: 13px; }
+.datetime-fold summary { cursor: pointer; color: #5a6b5a; }
+.datetime-fold input { margin-top: 8px; width: 100%; }
