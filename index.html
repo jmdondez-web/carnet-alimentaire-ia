@@ -62,10 +62,18 @@
         <button data-mode="lent">🍽️ À table</button>
       </div>
 
-      <!-- Pouce : chips uniquement -->
+      <!-- Pouce : chips personnalisables -->
       <div id="quick-zone">
+        <div class="chips-toolbar">
+          <p class="mode-hint small" style="margin:0;">Un tap = repas enregistré.</p>
+          <button id="editChipsBtn" class="link-btn chips-edit-btn">✏️ Modifier</button>
+        </div>
         <div class="chips" id="quickChips"></div>
-        <p class="mode-hint small">Un tap = repas enregistré. Pour détailler, passe en mode « À table ».</p>
+        <div id="chipsEditRow" class="table-addrow" style="display:none;">
+          <input type="text" id="newChipInput" placeholder="Ex: 🥯 Bagel, 🍪 Cookie…" maxlength="30">
+          <button id="addChipBtn" class="btn btn-secondary btn-sm">＋</button>
+        </div>
+        <p class="mode-hint small">Pour détailler, passe en mode « À table ».</p>
       </div>
 
       <!-- À table : formulaire détaillé (brouillon conservé si tu quittes l'appli) -->
