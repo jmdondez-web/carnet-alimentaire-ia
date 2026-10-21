@@ -55,8 +55,7 @@ async function init() {
   if (action === 'add') {
     setTimeout(() => document.getElementById('detailed-meal-section').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
   } else if (action === 'water') {
-    Water
-.addWater(33);
+    Water.addWater(33);
     Water.updateWaterUI('waterTotal', 'waterProgress');
     UI.showToast('33 cl ajoutés 💧');
   }
@@ -118,8 +117,7 @@ async function saveCurrentMeal() {
   analyseInBackground(newMeal);
 }
 
-// Chip « sur le pouce » : même flux, sans photo ni formulaire
-function saveQuickMeal(meal) {
+// Chip « sur le pouce » : même flux, sans photo ni formulairefunction saveQuickMeal(meal) {
   const newMeal = {
     id: Date.now(),
     datetime: new Date().toISOString().slice(0, 16),
@@ -141,8 +139,7 @@ function saveQuickMeal(meal) {
 async function analyseInBackground(meal) {
   const userMeds = Medications.getMeds();
   const healthConditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
-  const allergies = Storage.lo
-adAllergies ? Storage.loadAllergies() : [];
+  const allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
 
   try {
     const iaResult = await IA.analyseRepas(meal.text, meal.photo, userMeds, healthConditions, allergies);
