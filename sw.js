@@ -1,4 +1,4 @@
-const CACHE_NAME = "carnet-pwa-v9";
+const CACHE_NAME = "carnet-pwa-v10";
 const urlsToCache = [
   "/", "/index.html", "/settings.html", "/style.css", "/manifest.json", "/connaissances.json",
   "/js/app.js", "/js/storage.js", "/js/ui.js", "/js/voice.js", "/js/camera.js", "/js/water.js",
