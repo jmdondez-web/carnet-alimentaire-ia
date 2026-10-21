@@ -1,28 +1,22 @@
 // ========== IA SETTINGS MODULE ==========
 // Stockage local des préférences IA (mode, fournisseur, clé API, modèle)
 // Le consentement RGPD est recueilli via l'écran dédié (consent.js), plus de confirm() natif
+//
+// Politique fournisseur : UNIQUEMENT Mistral AI (entreprise française, hébergement européen,
+// offre gratuite sans carte bancaire, RGPD). Aucun fournisseur extra-européen.
 
 const STORAGE_KEY = "carnet_ia_settings";
 const CONSENT_KEY = "carnet_ia_consent";
 
 export const PROVIDERS = {
   mistral: {
-    name: "Mistral AI",
-    description: "🇫🇷 Modèle français, bonnes performances, offre gratuite (1M tokens)",
+    name: "Mistral AI (France)",
+    description: "🇪🇺 Fournisseur européen (France), RGPD, offre gratuite sans carte bancaire. Vérification par SMS requise.",
     apiUrl: "https://api.mistral.ai/v1/chat/completions",
-    models: ["mistral-tiny", "mistral-small", "mistral-medium"],
+    models: ["mistral-small-latest", "open-mistral-nemo"],
     visionSupported: true,
-    visionModel: "pixtral-12b-2409",
-    freeTrial: true
-  },
-  groq: {
-    name: "Groq",
-    description: "⚡ Ultra-rapide, modèle Llama 3, gratuit (limité)",
-    apiUrl: "https://api.groq.com/openai/v1/chat/completions",
-    models: ["llama3-8b-8192", "llama3-70b-8192"],
-    visionSupported: false,
-    visionModel: null,
-    freeTrial: true
+    visionModel: "pixtral-12b-latest",
+    freeTier: true
   }
 };
 
@@ -30,9 +24,32 @@ const DEFAULT_SETTINGS = {
   mode: "local",
   provider: "mistral",
   apiKey: "",
-  model: "mistral-tiny",
+  model: "mistral-small-latest",
   visionEnabled: true
 };
+
+// Migration douce : si un ancien réglage référence un modèle ou fournisseur disparu
+// (mistral-tiny, mistral-medium, pixtral-12b-2409, groq…), on repasse aux valeurs par défaut.
+export function getIASettings() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  const base = { ...DEFAULT_SETTINGS };
+  if (!stored) return base;
+  try {
+    const parsed = JSON.parse(stored);
+    const merged = { ...base, ...parsed };
+    if (!PROVIDERS[merged.provider]) {
+      merged.provider = "mistral";
+      merged.model = DEFAULT_SETTINGS.model;
+    }
+    const provider = PROVIDERS[merged.provider];
+    if (merged.model && !provider.models.includes(merged.model)) {
+      merged.model = DEFAULT_SETTINGS.model;
+    }
+    return merged;
+  } catch(e) {
+    return base;
+  }
+}
 
 export function hasUserConsented() {
   return localStorage.getItem(CONSENT_KEY) === "true";
@@ -44,19 +61,6 @@ export function setUserConsent(consent) {
 
 export function resetUserConsent() {
   localStorage.removeItem(CONSENT_KEY);
-}
-
-export function getIASettings() {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    return { ...DEFAULT_SETTINGS };
-  }
-  try {
-    const parsed = JSON.parse(stored);
-    return { ...DEFAULT_SETTINGS, ...parsed };
-  } catch(e) {
-    return { ...DEFAULT_SETTINGS };
-  }
 }
 
 export function saveIASettings(settings) {
@@ -110,7 +114,7 @@ export async function testAPIConnection() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${settings.apiKey}`
+        "Authorization": "Bearer " + settings.apiKey
       },
       body: JSON.stringify({
         model: config.model,
@@ -123,7 +127,7 @@ export async function testAPIConnection() {
 
     if (!response.ok) {
       const error = await response.text();
-      return { success: false, error: `HTTP ${response.status}: ${error}` };
+      return { success: false, error: "HTTP " + response.status + ": " + error };
     }
 
     const data = await response.json();
