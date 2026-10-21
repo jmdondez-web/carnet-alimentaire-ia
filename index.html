@@ -22,10 +22,16 @@
     <!-- INDICATEUR IA -->
     <div id="iaModeIndicator" class="ia-mode-indicator-container"></div>
 
-    <!-- TABLEAU DE BORD PNNS -->
+    <!-- TABLEAU DE BORD PNNS : bouton repliable -->
     <div class="dashboard-section">
-      <h2>📊 Mes objectifs du jour/semaine</h2>
-      <div id="pnnsDashboard"></div>
+      <button class="dash-collapsed" id="dashToggle" aria-expanded="false">
+        <span class="dash-title">📊 Mes objectifs du jour/semaine</span>
+        <span class="dash-mini" id="dashMini"></span>
+        <span class="dash-caret" id="dashCaret">▼</span>
+      </button>
+      <div class="dash-details" id="dashDetails">
+        <div id="pnnsDashboard"></div>
+      </div>
     </div>
 
     <!-- SECTION EAU (condensée) -->
@@ -147,6 +153,38 @@
       </details>
     </footer>
   </div>
+
+  <!-- Dashboard repliable : bascule + résumé compact synchronisé au rendu -->
+  <script>
+  (function () {
+    var t = document.getElementById('dashToggle');
+    var d = document.getElementById('dashDetails');
+    var c = document.getElementById('dashCaret');
+    var m = document.getElementById('dashMini');
+    if (t && d) {
+      t.addEventListener('click', function () {
+        var open = d.classList.toggle('open');
+        t.classList.toggle('open', open);
+        t.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (c) c.textContent = open ? '▲' : '▼';
+      });
+    }
+    var pd = document.getElementById('pnnsDashboard');
+    if (pd && m && typeof MutationObserver !== 'undefined') {
+      new MutationObserver(function () {
+        var rows = pd.querySelectorAll('.dash-row');
+        if (!rows.length) return;
+        var parts = [];
+        rows.forEach(function (r) {
+          var e = r.querySelector('.dash-emoji');
+          var n = r.querySelector('.dash-count');
+          if (e && n) parts.push(e.textContent.trim() + n.textContent.trim());
+        });
+        m.textContent = parts.join(' ');
+      }).observe(pd, { childList: true, subtree: true });
+    }
+  })();
+  </script>
 
   <script type="module" src="js/app.js"></script>
 </body>

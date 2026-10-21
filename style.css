@@ -138,3 +138,14 @@ body.dark .card, body.dark .dashboard-section > div, body.dark .water-section > 
 @media (min-width: 600px) {
   .app-container { max-width:520px; }
 }
+
+/* ==== Dashboard repliable (écran d'accueil sur une seule vue) ==== */
+.dashboard-section > div.dash-details { background:transparent; box-shadow:none; padding:0; margin:0; border:0; border-radius:0; }
+.dash-collapsed { display:flex; align-items:center; gap:10px; width:100%; border:0; background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:var(--sp-2) var(--sp-3); cursor:pointer; font-family:inherit; color:var(--text); margin-bottom:var(--sp-2); }
+.dash-collapsed .dash-title { font-size:var(--fs-md); font-weight:600; flex:1; text-align:left; }
+.dash-mini { font-size:var(--fs-sm); color:var(--green); font-weight:600; white-space:nowrap; }
+.dash-caret { font-size:var(--fs-sm); color:var(--muted); }
+.dash-details { max-height:0; overflow:hidden; transition:max-height .35s ease; }
+.dash-details.open { max-height:440px; }
+.dash-details > div { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:var(--sp-3); margin-bottom:var(--sp-2); border:1px solid rgba(0,0,0,.04); }
+body.dark .dash-details > div { border-color:rgba(255,255,255,.05); }
