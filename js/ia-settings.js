@@ -84,7 +84,11 @@ export function updateIASetting(key, value) {
 
 export function hasValidAPIKey() {
   const settings = getIASettings();
-  return settings.mode === "external" && settings.apiKey && settings.apiKey.length > 10;
+  // Clé personnelle OU proxy du serveur : le mode externe est valide sans clé
+  // personnelle dès que l'appli est servie par le LXC (les appels sans clé
+  // passent par /api/analyse, clé serveur). En cas d'échec du proxy, l'analyse
+  // retombe automatiquement sur le mode local (ia.js).
+  return settings.mode === "external" && (!settings.apiKey || settings.apiKey.length > 10);
 }
 
 export function getAPIConfig() {
