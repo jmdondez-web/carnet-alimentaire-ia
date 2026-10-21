@@ -1,5 +1,17 @@
 import { getIASettings, getAPIConfig } from './ia-settings.js';
 
+// Identifiant pseudonymisé par appareil : UUID aléatoire, aucun lien avec
+// l'identité. Sert uniquement au comptage d'utilisation (qui teste ?).
+const CLIENT_ID_KEY = 'carnet_client_id';
+function getClientId() {
+  let id = localStorage.getItem(CLIENT_ID_KEY);
+  if (!id) {
+    id = (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+    localStorage.setItem(CLIENT_ID_KEY, id);
+  }
+  return id;
+}
+
 const SYSTEM_PROMPT = `Tu es un assistant d'éducation alimentaire, PAS un médecin.
 
 RÈGLES :
@@ -48,7 +60,8 @@ export async function analyseRepas(mealText, photoBase64, userMeds, healthCondit
             { type: "image_url", image_url: { url: photoBase64 } }
           ]}
         ],
-        vision: true
+        vision: true,
+        clientId: getClientId()
       };
     } else {
       body = {
@@ -56,7 +69,8 @@ export async function analyseRepas(mealText, photoBase64, userMeds, healthCondit
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userPrompt }
         ],
-        vision: false
+        vision: false,
+        clientId: getClientId()
       };
     }
 
