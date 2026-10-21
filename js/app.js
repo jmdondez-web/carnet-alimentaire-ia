@@ -60,21 +60,41 @@ async function init() {
     UI.showToast('33 cl ajoutés 💧');
   }
 
-  // Initialiser la voix
-  Voice.initVoice(
+  // Initialiser la voix (dictée native du navigateur — Chrome/Edge Android, Safari iOS 14.1+)
+  const voiceReady = Voice.initVoice(
     (text) => {
       const ta = document.getElementById("mealText");
       let current = ta.value;
       if (current && !current.endsWith(" ")) current += " ";
       ta.value = current + text;
+      // Le brouillon à table suit la dictée (persistant)
+      const draft = Storage.loadRepasDraft ? Storage.loadRepasDraft() : {};
+      draft.text = ta.value;
+      if (Storage.saveRepasDraft) Storage.saveRepasDraft(draft);
     },
-    (error) => document.getElementById("voiceStatus").innerText = `⚠️ ${error}`,
+    (error) => {
+      const status = document.getElementById("voiceStatus");
+      if (status) status.innerText = error === "not-allowed"
+        ? "⚠️ Micro refusé — autorise le micro dans ton navigateur"
+        : "⚠️ " + error;
+    },
     () => {
-      document.getElementById("startVoiceBtn").disabled = false;
-      document.getElementById("stopVoiceBtn").disabled = true;
-      document.getElementById("voiceStatus").innerText = "Dictée terminée";
+      const startBtn = document.getElementById("startVoiceBtn");
+      const stopBtn = document.getElementById("stopVoiceBtn");
+      const status = document.getElementById("voiceStatus");
+      if (startBtn) startBtn.disabled = false;
+      if (stopBtn) stopBtn.disabled = true;
+      if (status) status.innerText = "Dictée terminée";
     }
   );
+  if (!voiceReady) {
+    const startBtn = document.getElementById("startVoiceBtn");
+    const stopBtn = document.getElementById("stopVoiceBtn");
+    const status = document.getElementById("voiceStatus");
+    if (startBtn) startBtn.disabled = true;
+    if (stopBtn) stopBtn.disabled = true;
+    if (status) status.innerText = "Dictée non supportée par ce navigateur (essaie Chrome)";
+  }
 
   bindEvents();
   Navigation.initNavigation();
@@ -117,7 +137,8 @@ async function saveCurrentMeal() {
   analyseInBackground(newMeal);
 }
 
-// Chip « sur le pouce » : même flux, sans photo ni formulairefunction saveQuickMeal(meal) {
+// Chip « sur le pouce » : même flux, sans photo ni formulaire
+function saveQuickMeal(meal) {
   const newMeal = {
     id: Date.now(),
     datetime: new Date().toISOString().slice(0, 16),
