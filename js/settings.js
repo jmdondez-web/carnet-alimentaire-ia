@@ -1,4 +1,4 @@
-// js/settings.js (version finale corrigée)
+// js/settings.js — réécrit proprement (corruption réparée) + fiabilisation des champs
 import * as Storage from './storage.js';
 import * as Medications from './medications.js';
 import * as Export from './export.js';
@@ -9,79 +9,90 @@ import { revokeConsent, getConsentDate } from './consent.js';
 
 let repasList = [];
 
-// Initialisation après chargement du DOM
 document.addEventListener('DOMContentLoaded', async () => {
-  // Chargement des données
   repasList = Storage.loadRepas();
   Medications.initMeds();
   await IA.loadKnowledgeBase();
 
-  // Rendu des listes
   Medications.renderMeds('medicationsList');
   renderHealthConditions();
   renderAllergies();
   updateClearMedsVisibility();
 
-  // Interface IA
   UISettings.renderIASettingsPanel('iaSettingsPanel');
-
-  // Mode sombre
   PWA.initDarkMode();
 
-  // Branchement des événements
   bindEvents();
 });
 
-// Affichage des problèmes de santé
+// --- Confirmation visuelle (toast) ---
+function toast(msg) {
+  let t = document.getElementById('settingsToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'settingsToast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a2b1a;color:#fff;padding:12px 22px;border-radius:24px;font-size:14px;z-index:9999;transition:transform .3s;max-width:85%;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  requestAnimationFrame(() => { t.style.transform = 'translateX(-50%) translateY(0)'; });
+  setTimeout(() => { t.style.transform = 'translateX(-50%) translateY(80px)'; }, 2000);
+}
+
+// --- Problèmes de santé ---
 function renderHealthConditions() {
   const container = document.getElementById('healthList');
   if (!container) return;
 
-  const healthConditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
-
+  const conditions = Storage.loadHealthConditions();
   const clearBtn = document.getElementById('clearHealthBtn');
-  if (clearBtn) clearBtn.style.display = healthConditions.length > 0 ? 'inline-block' : 'none';
+  if (clearBtn) clearBtn.style.display = conditions.length > 0 ? 'inline-block' : 'none';
 
-  if (healthConditions.length === 0) {
+  if (conditions.length === 0) {
     container.innerHTML = '<li>Aucun problème de santé enregistré</li>';
     return;
   }
 
-  container.innerHTML = healthConditions.map((condition, index) => `
+  container.innerHTML = conditions.map((condition, index) => `
     <li>
       <span>🩺 ${escapeHtml(condition)}</span>
       <button class="remove-med" data-index="${index}">🗑️</button>
     </li>
   `).join('');
 
-  document.querySelectorAll('.remove-med[data-index]').forEach(btn => {
+  container.querySelectorAll('.remove-med').forEach(btn => {
     btn.addEventListener('click', () => {
       const idx = parseInt(btn.dataset.index);
-      const conditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
+      const conditions = Storage.loadHealthConditions();
       conditions.splice(idx, 1);
-      if (Storage.saveHealthConditions) Storage.saveHealthConditions(conditions);
-      renderHealthConditio
-ns();
+      Storage.saveHealthConditions(conditions);
+      renderHealthConditions();
+      toast('Problème de santé supprimé');
     });
   });
 }
 
-// Ajout d'un problème de santé
 function addHealthCondition(condition) {
-  if (!condition.trim()) return;
-  let conditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
-  conditions.push(condition.trim());
-  if (Storage.saveHealthConditions) Storage.saveHealthConditions(conditions);
+  const clean = condition.trim();
+  if (!clean) { toast('Saisis un problème de santé'); return false; }
+  const conditions = Storage.loadHealthConditions();
+  if (conditions.some(c => c.toLowerCase() === clean.toLowerCase())) {
+    toast('Déjà dans la liste');
+    return false;
+  }
+  conditions.push(clean);
+  Storage.saveHealthConditions(conditions);
   renderHealthConditions();
+  toast('Problème de santé ajouté ✓');
+  return true;
 }
 
-// Affichage des allergies
+// --- Allergies ---
 function renderAllergies() {
   const container = document.getElementById('allergiesList');
   if (!container) return;
 
-  const allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
-
+  const allergies = Storage.loadAllergies();
   const clearBtn = document.getElementById('clearAllergiesBtn');
   if (clearBtn) clearBtn.style.display = allergies.length > 0 ? 'inline-block' : 'none';
 
@@ -97,36 +108,42 @@ function renderAllergies() {
     </li>
   `).join('');
 
-  document.querySelectorAll('.remove-allergy').forEach(btn => {
+  container.querySelectorAll('.remove-allergy').forEach(btn => {
     btn.addEventListener('click', () => {
       const idx = parseInt(btn.dataset.index);
-      const allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
+      const allergies = Storage.loadAllergies();
       allergies.splice(idx, 1);
-      if (Storage.saveAllergies) Storage.saveAllergies(allergies);
+      Storage.saveAllergies(allergies);
       renderAllergies();
+      toast('Allergie supprimée');
     });
   });
 }
 
-// Ajout d'une allergie
 function addAllergy(allergie) {
-  if (!allergie.trim()) return;
-  let allergies = Storage.loadAllergies ? Storage.loadAllergies() : [];
-  allergies.push(allergie.trim());
-  if (Storage.saveAllergies) Storage.saveAllergies(allergies);
+  const clean = allergie.trim();
+  if (!clean) { toast('Saisis une allergie'); return false; }
+  const allergies = Storage.loadAllergies();
+  if (allergies.some(a => a.toLowerCase() === clean.toLowerCase())) {
+    toast('Déjà dans la liste');
+    return false;
+  }
+  allergies.push(clean);
+  Storage.saveAllergies(allergies);
   renderAllergies();
+  toast('Allergie ajoutée ✓');
+  return true;
 }
 
-// Affiche/masque le bouton d'effacement des traitements selon le contenu
+// --- Visibilité du bouton d'effacement des traitements ---
 function updateClearMedsVisibility() {
   const clearBtn = document.getElementById('clearMedsBtn');
   if (clearBtn) clearBtn.style.display = Medications.getMeds().length > 0 ? 'inline-block' : 'none';
 }
 
-// Ef
-facement complet d'une liste de données santé (droit à l'effacement RGPD)
+// --- Effacements ciblés (RGPD : droit à l'effacement) ---
 function confirmClearList(label) {
-  return confirm(`⚠️ Effacer ${label} ?\nCette action est irréversible.`);
+  return confirm('⚠️ Effacer ' + label + ' ?\nCette action est irréversible.');
 }
 
 function clearMeds() {
@@ -135,89 +152,91 @@ function clearMeds() {
   Medications.initMeds();
   Medications.renderMeds('medicationsList');
   updateClearMedsVisibility();
+  toast('Traitements effacés');
 }
 
 function clearHealthConditions() {
   if (!confirmClearList('toute la liste des problèmes de santé')) return;
-  if (Storage.saveHealthConditions) Storage.saveHealthConditions([]);
+  Storage.saveHealthConditions([]);
   renderHealthConditions();
+  toast('Problèmes de santé effacés');
 }
 
 function clearAllergies() {
   if (!confirmClearList('toute la liste des allergies')) return;
-  if (Storage.saveAllergies) Storage.saveAllergies([]);
+  Storage.saveAllergies([]);
   renderAllergies();
+  toast('Allergies effacées');
 }
 
-// Effacement de l'historique des repas (les données d'eau restent)
 function clearMealsHistory() {
   if (!confirmClearList("tout l'historique des repas")) return;
   Storage.saveRepas([]);
   repasList = [];
-  alert('Historique des repas effacé.');
+  toast('Historique des repas effacé');
 }
 
-// Révocation du consentement IA externe (RGPD : révocable à tout moment)
 function revokeExternalConsent() {
   const consentDate = getConsentDate();
-  const when = consentDate ? ` (donné le ${new Date(consentDate).toLocaleString()})` : '';
-  if (!confirm(`⚠️ Révoquer le consentement IA externe${when} ?\nLe mode IA externe sera désactivé et reviendra au mode local. Aucune donnée ne quitte plus ton téléphone.`)) return;
+  const when = consentDate ? ' (donné le ' + new Date(consentDate).toLocaleString() + ')' : '';
+  if (!confirm('⚠️ Révoquer le consentement IA externe' + when + ' ?\nLe mode IA externe sera désactivé et reviendra au mode local. Aucune donnée ne quitte plus ton téléphone.')) return;
   revokeConsent();
   import('./ia-settings.js').then(m => {
     m.updateIASetting('mode', 'local');
     UISettings.renderIASettingsPanel('iaSettingsPanel');
-    alert('Consentement révoqué. Mode IA externe désactivé.');
+    toast('Consentement révoqué — mode local');
   });
 }
 
-// Gestion des événements
+// --- Événements ---
 function bindEvents() {
-  // Ajout médicament
+  // Ajout médicament : validation, confirmation, remise à blanc
+  const addMed = () => {
+    const nameInput = document.getElementById('medNameInput');
+    const condInput = document.getElementById('medConditionInput');
+    const name = nameInput.value.trim();
+    if (!name) { toast('Saisis le nom du médicament'); return; }
+    Medications.addMed(name, condInput.value.trim());
+    Medications.renderMeds('medicationsList');
+    updateClearMedsVisibility();
+    nameInput.value = '';
+    condInput.value = '';
+    toast('Traitement ajouté ✓');
+  };
   const addMedBtn = document.getElementById('addMedBtn');
-  if (addMedBtn) {
-    addMedBtn.addEventListener('click', () => {
-      const name = document.getElementById('medNameInput').value.trim();
-      const condition = document.getElementById('medConditionInput').value.trim();
-      if (name) {
-        Medications.addMed(name, condition);
-        Medications.renderMeds('medicationsList');
-        updateClearMedsVisibility();
-        document.getElementById('medNameInput').value = '';
-        document.getElementById('medConditionInput').value = '';
-      }
-    });
-  }
+  if (addMedBtn) addMedBtn.addEventListener('click', addMed);
+  const medNameInput = document.getElementById('medNameInput');
+  const medCondInput = document.getElementById('medConditionInput');
+  if (medNameInput) medNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') addMed(); });
+  if (medCondInput) medCondInput.addEventListener('keydown', e => { if (e.key === 'Enter') addMed(); });
 
   // Ajout problème de santé
+  const addHealth = () => {
+    const input = document.getElementById('healthConditionInput');
+    if (addHealthCondition(input.value)) input.value = '';
+  };
   const addHealthBtn = document.getElementById('addHealthBtn');
-  if (addHealthBtn) {
-    addHealthBtn.addEventListener('click', () => {
-      const condition = document.getElementById('healthConditionInput').value.trim();
-      addHealthCondition(condition);
-      document.getElementById('healthConditionInput').value = '';
-    });
-  }
+  if (addHealthBtn) addHealthBtn.addEventListener('click', addHealth);
+  const healthInput = document.getElementById('healthConditionInput');
+  if (healthInput) healthInput.addEventListener('keydown', e => { if (e.key === 'Enter') addHealth(); });
 
   // Ajout allergie
+  const addAllergy = () => {
+    const input = document.getElementById('allergyInput');
+    if (addAllergy(input.value)) input.value = '';
+  };
   const addAllergyBtn = document.getElementById('addAllergyBtn');
-  if (addAllergyBtn) {
-    addAllergyBtn.addEventListener('click', () => {
-      const allergie = document.
-getElementById('allergyInput').value.trim();
-      addAllergy(allergie);
-      document.getElementById('allergyInput').value = '';
-    });
-  }
+  if (addAllergyBtn) addAllergyBtn.addEventListener('click', addAllergy);
+  const allergyInput = document.getElementById('allergyInput');
+  if (allergyInput) allergyInput.addEventListener('keydown', e => { if (e.key === 'Enter') addAllergy(); });
 
-  // Effacement par liste (RGPD : droit à l'effacement ciblé)
+  // Effacements ciblés
   const clearMedsBtn = document.getElementById('clearMedsBtn');
   if (clearMedsBtn) clearMedsBtn.addEventListener('click', clearMeds);
   const clearHealthBtn = document.getElementById('clearHealthBtn');
   if (clearHealthBtn) clearHealthBtn.addEventListener('click', clearHealthConditions);
   const clearAllergiesBtn = document.getElementById('clearAllergiesBtn');
   if (clearAllergiesBtn) clearAllergiesBtn.addEventListener('click', clearAllergies);
-
-  // Historique des repas + consentement IA
   const clearMealsBtn = document.getElementById('clearMealsHistoryBtn');
   if (clearMealsBtn) clearMealsBtn.addEventListener('click', clearMealsHistory);
   const revokeConsentBtn = document.getElementById('revokeConsentBtn');
@@ -225,13 +244,9 @@ getElementById('allergyInput').value.trim();
 
   // Export
   const exportBtn = document.getElementById('exportAllDataBtn');
-  if (exportBtn) {
-    exportBtn.addEventListener('click', () => {
-      Export.exportJSON(repasList);
-    });
-  }
+  if (exportBtn) exportBtn.addEventListener('click', () => Export.exportJSON(repasList));
 
-  // Import (fusion d'un export JSON — migration d'appareil/origine)
+  // Import (fusion)
   const importBtn = document.getElementById('importDataBtn');
   const importInput = document.getElementById('importFileInput');
   if (importBtn && importInput) {
@@ -245,16 +260,15 @@ getElementById('allergyInput').value.trim();
       }
       try {
         const res = await Export.importJSON(file);
-        // Rafraîchissement complet de l'état local et de l'affichage
         repasList = Storage.loadRepas();
         Medications.initMeds();
         Medications.renderMeds('medicationsList');
         renderHealthConditions();
         renderAllergies();
         updateClearMedsVisibility();
-        alert(`✅ Import terminé.\nRepas ajoutés : ${res.repas}\nFichier du : ${file.name}`);
+        toast('Import terminé ✓ (' + res.repas + ' repas)');
       } catch (e) {
-        alert('❌ Import échoué : ' + e.message);
+        toast('❌ Import échoué : ' + e.message);
       }
       importInput.value = '';
     });
@@ -272,7 +286,7 @@ getElementById('allergyInput').value.trim();
     });
   }
 
-  // RETOUR VERS ACCUEIL (flèche)
+  // Retour accueil
   const backBtn = document.getElementById('backToHomeBtn');
   if (backBtn) {
     backBtn.addEventListener('click', (e) => {
@@ -282,10 +296,9 @@ getElementById('allergyInput').value.trim();
   }
 }
 
-// Échappement HTML
 function escapeHtml(str) {
   if (!str) return "";
-  return str.replace(/[&<>]/g, function(m) {
+  return String(str).replace(/[&<>]/g, function(m) {
     if (m === "&") return "&amp;";
     if (m === "<") return "&lt;";
     if (m === ">") return "&gt;";
