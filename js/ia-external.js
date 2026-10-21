@@ -1,5 +1,17 @@
 import { getIASettings, getAPIConfig } from './ia-settings.js';
 
+// Identifiant pseudonymisé par appareil : UUID aléatoire, aucun lien avec
+// l'identité. Sert uniquement au comptage d'utilisation (qui teste ?).
+const CLIENT_ID_KEY = 'carnet_client_id';
+function getClientId() {
+  let id = localStorage.getItem(CLIENT_ID_KEY);
+  if (!id) {
+    id = (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+    localStorage.setItem(CLIENT_ID_KEY, id);
+  }
+  return id;
+}
+
 const SYSTEM_PROMPT = `Tu es un assistant d'éducation alimentaire, PAS un médecin.
 
 RÈGLES :
@@ -12,6 +24,16 @@ RÈGLES :
 - Si aucune interaction : "Aucune interaction connue détectée."
 - Réponse courte, en français.`;
 
+function buildMessages(mealText, userMeds, healthConditions, allergies) {
+  const medsText = (userMeds || []).map(m => `${m.displayName} (${m.condition || ''})`).join(", ");
+  const conditionsText = (healthConditions || []).join(", ");
+  const allergiesText = (allergies || []).join(", ");
+  return `Repas : ${mealText || "Pas de description texte"}
+Médicaments : ${medsText || "Aucun"}
+Problèmes de santé : ${conditionsText || "Aucun"}
+Allergies/intolérances : ${allergiesText || "Aucune"}`;
+}
+
 export async function analyseRepas(mealText, photoBase64, userMeds, healthConditions = [], allergies = []) {
   const settings = getIASettings();
   if (settings.mode !== "external") {
@@ -19,20 +41,18 @@ export async function analyseRepas(mealText, photoBase64, userMeds, healthCondit
   }
 
   const config = getAPIConfig();
-  const medsText = (userMeds || []).map(m => `${m.displayName} (${m.condition || ''})`).join(", ");
-  const conditionsText = (healthConditions || []).join(", ");
-  const allergiesText = (allergies || []).join(", ");
+  const userPrompt = buildMessages(mealText, userMeds, healthConditions, allergies);
 
-  const userPrompt = `Repas : ${mealText || "Pas de description texte"}
-Médicaments : ${medsText || "Aucun"}
-Problèmes de santé : ${conditionsText || "Aucun"}
-Allergies/intolérances : ${allergiesText || "Aucune"}`;
+  // Deux chemins, mêmes messages :
+  // 1. Clé personnelle présente → appel direct à Mistral (utile hors LXC).
+  // 2. Sinon → proxy du LXC (/api/analyse) : la clé serveur fait le travail,
+  //    l'utilisateur n'a rien à configurer. Aucune donnée persistée côté serveur.
+  const useProxy = !settings.apiKey;
 
   try {
     let body;
     if (photoBase64 && config.visionSupported) {
       body = {
-        model: config.model,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: [
@@ -40,37 +60,51 @@ Allergies/intolérances : ${allergiesText || "Aucune"}`;
             { type: "image_url", image_url: { url: photoBase64 } }
           ]}
         ],
-        max_tokens: 400,
-        temperature: 0.3
+        vision: true,
+        clientId: getClientId()
       };
     } else {
       body = {
-        model: config.model,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userPrompt }
         ],
-        max_tokens: 300,
-        temperature: 0.3
+        vision: false,
+        clientId: getClientId()
       };
     }
 
-    const response = await fetch(config.url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${settings.apiKey}`
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!response.ok) {
-      return { success: false, error: `API error ${response.status}` };
+    let data;
+    if (useProxy) {
+      const response = await fetch("/api/analyse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        return { success: false, error: `Proxy ${response.status}: ${errText}` };
+      }
+      data = await response.json();
+    } else {
+      body.model = config.model;
+      body.max_tokens = 400;
+      body.temperature = 0.3;
+      const response = await fetch(config.url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + settings.apiKey
+        },
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) {
+        return { success: false, error: `API error ${response.status}` };
+      }
+      data = await response.json();
     }
 
-    const data = await response.json();
     const analysis = data.choices?.[0]?.message?.content || "Analyse non disponible";
-
     return { success: true, analysis };
   } catch(e) {
     return { success: false, error: e.message };
