@@ -152,3 +152,14 @@ body.dark .dash-details > div { border-color:rgba(255,255,255,.05); }
 
 /* ==== Conseil du jour dans le dashboard déplié ==== */
 .dash-tip { font-size:var(--fs-md); margin:var(--sp-2) 0 0; padding-top:var(--sp-2); border-top:1px solid var(--green-soft); color:var(--text); }
+
+/* ==== Histogramme eau intra-journalier ==== */
+.water-hist { display:flex; align-items:flex-end; gap:var(--sp-1); height:110px; padding:var(--sp-1) 0; overflow-x:auto; }
+.water-hist-bar { display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; min-width:44px; flex:0 0 auto; }
+.water-hist-col { width:100%; max-width:34px; background:var(--green); border-radius:6px 6px 0 0; display:flex; align-items:flex-start; justify-content:center; color:#fff; font-size:var(--fs-xs); font-weight:600; padding-top:3px; position:relative; animation:waterbar .5s ease; }
+.water-hist-col span { background:transparent; }
+.water-hist-time { font-size:var(--fs-xs); color:var(--muted); margin-top:4px; white-space:nowrap; }
+.water-hist-total { font-size:var(--fs-sm); color:var(--green); font-weight:600; }
+.water-hist-scale { font-size:var(--fs-xs); color:var(--muted); margin:var(--sp-1) 0 0; }
+.water-hist-empty { font-size:var(--fs-sm); color:var(--muted); margin:0; }
+@keyframes waterbar { from { height:0; } }
