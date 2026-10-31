@@ -24,8 +24,19 @@ curl -fsSL https://tailscale.com/install.sh | sh
 tailscale up
 ```
 
+## HTTPS auto-signé (requis pour dictée + caméra)
+La dictée vocale et la caméra exigent un contexte sécurisé — en HTTP, Chrome refuse le micro.
+```bash
+cd /opt/carnet-alimentaire/deploy
+bash setup-tls.sh 192.168.0.105        # IP du LXC
+```
+- PWA : `https://<IP-du-LXC>/` — accepter l'avertissement (Avancé → Procéder), une fois par appareil.
+- Le port 80 reste actif, mais le micro/caméra ne fonctionnent qu'en HTTPS.
+- localStorage est propre à chaque origine : les données saisies en http:// ne sont pas visibles en https:// — utiliser l'export/import JSON pour migrer.
+- Régénérer le certificat : `bash setup-tls.sh --force`.
+
 ## Tests
-- PWA : `http://<IP-du-LXC>/`
+- PWA : `http://<IP-du-LXC>/` ou `https://<IP-du-LXC>/`
 - API : `http://<IP-du-LXC>/api/health`
 - Base de connaissances : `http://<IP-du-LXC>/api/knowledge`
 
