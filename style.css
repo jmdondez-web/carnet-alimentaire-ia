@@ -125,6 +125,8 @@ body.dark .card, body.dark .dashboard-section > div, body.dark .water-section > 
 #mealsList li { padding:var(--sp-2) 4px; border-bottom:1px solid var(--green-soft); font-size:var(--fs-md); }
 #mealsList li .meal-time { display:block; font-size:var(--fs-sm); color:var(--muted); }
 #mealsList li .meal-alert { display:block; font-size:var(--fs-sm); color:var(--amber); }
+#mealsList li .meal-photo { display:block; width:300px; max-width:100%; height:auto; border-radius:var(--radius-sm); margin:var(--sp-1) 0 var(--sp-1); box-shadow:var(--shadow); }
+#mealsList li .meal-alert { display:block; font-size:var(--fs-sm); color:var(--amber); }
 
 .toast { position:fixed; bottom:calc(20px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%) translateY(90px); background:var(--text); color:var(--bg); padding:var(--sp-2) 22px; border-radius:24px; font-size:var(--fs-md); transition:transform .35s; z-index:30; }
 .toast.show { transform:translateX(-50%) translateY(0); }
