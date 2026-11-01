@@ -110,6 +110,13 @@ async function init() {
     if (status) status.innerText = "Dictée non supportée par ce navigateur (essaie Chrome)";
   }
 
+  // Version de l'appli — source unique : manifest.json
+  try {
+    const manifest = await fetch("manifest.json").then(r => r.json());
+    const el = document.getElementById("appVersion");
+    if (el && manifest.version) el.textContent = "v" + manifest.version;
+  } catch (e) { /* hors ligne ou indisponible : badge vide */ }
+
   bindEvents();
   Navigation.initNavigation();
 }
