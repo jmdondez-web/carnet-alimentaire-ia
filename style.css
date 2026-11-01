@@ -55,6 +55,8 @@ textarea { min-height:80px; resize:vertical; }
 body { margin:0; background:var(--bg); color:var(--text); font-size:var(--fs-md); line-height:1.618; }
 .app-container { max-width:480px; margin:0 auto; padding:0 var(--sp-2) calc(var(--sp-4) + env(safe-area-inset-bottom)); }
 .main-header { display:flex; justify-content:space-between; align-items:center; padding:var(--sp-3) var(--sp-2) var(--sp-1); }
+.settings-col { display:flex; flex-direction:column; align-items:center; }
+.app-version { font-size:var(--fs-xs); color:var(--muted); line-height:1; }
 .header-title h1 { font-size:var(--fs-xl); margin:0; font-weight:700; letter-spacing:-.3px; }
 .subtitle { font-size:var(--fs-sm); color:var(--muted); margin:2px 0 0; }
 
