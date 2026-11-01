@@ -61,16 +61,19 @@ async function init() {
   }
 
   // Initialiser la voix (dictée native du navigateur — Chrome/Edge Android, Safari iOS 14.1+)
+  const persistDraft = () => {
+    const ta = document.getElementById("mealText");
+    const draft = Storage.loadRepasDraft ? Storage.loadRepasDraft() : {};
+    draft.text = ta.value;
+    if (Storage.saveRepasDraft) Storage.saveRepasDraft(draft);
+  };
   const voiceReady = Voice.initVoice(
     (text) => {
       const ta = document.getElementById("mealText");
       let current = ta.value;
       if (current && !current.endsWith(" ")) current += " ";
       ta.value = current + text;
-      // Le brouillon à table suit la dictée (persistant)
-      const draft = Storage.loadRepasDraft ? Storage.loadRepasDraft() : {};
-      draft.text = ta.value;
-      if (Storage.saveRepasDraft) Storage.saveRepasDraft(draft);
+      persistDraft();
     },
     (error) => {
       const status = document.getElementById("voiceStatus");
@@ -85,6 +88,17 @@ async function init() {
       if (startBtn) startBtn.disabled = false;
       if (stopBtn) stopBtn.disabled = true;
       if (status) status.innerText = "Dictée terminée";
+    },
+    (corrections) => {
+      // Chrome Android re-livre parfois un résultat final corrigé :
+      // remplacer le fragment déjà inséré par la version complète.
+      const ta = document.getElementById("mealText");
+      for (const c of corrections) {
+        if (ta.value.includes(c.from)) {
+          ta.value = ta.value.replace(c.from, c.to);
+        }
+      }
+      persistDraft();
     }
   );
   if (!voiceReady) {
