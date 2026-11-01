@@ -191,24 +191,22 @@ function revokeExternalConsent() {
 // --- Événements ---
 function bindEvents() {
   // Ajout médicament : validation, confirmation, remise à blanc
+  // (le champ « Pourquoi ? » a été supprimé : le contexte médical général
+  //  se déclare dans la section « Problèmes de santé », source unique)
   const addMed = () => {
     const nameInput = document.getElementById('medNameInput');
-    const condInput = document.getElementById('medConditionInput');
     const name = nameInput.value.trim();
     if (!name) { toast('Saisis le nom du médicament'); return; }
-    Medications.addMed(name, condInput.value.trim());
+    Medications.addMed(name, '');
     Medications.renderMeds('medicationsList');
     updateClearMedsVisibility();
     nameInput.value = '';
-    condInput.value = '';
     toast('Traitement ajouté ✓');
   };
   const addMedBtn = document.getElementById('addMedBtn');
   if (addMedBtn) addMedBtn.addEventListener('click', addMed);
   const medNameInput = document.getElementById('medNameInput');
-  const medCondInput = document.getElementById('medConditionInput');
   if (medNameInput) medNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') addMed(); });
-  if (medCondInput) medCondInput.addEventListener('keydown', e => { if (e.key === 'Enter') addMed(); });
 
   // Ajout problème de santé
   const addHealth = () => {

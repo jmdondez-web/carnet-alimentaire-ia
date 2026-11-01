@@ -14,7 +14,7 @@ export function addMed(name, condition) {
   const newMed = {
     id: Date.now(),
     name: name.toLowerCase().trim(),
-    condition: condition.toLowerCase().trim(),
+    condition: (condition || '').toLowerCase().trim(),
     displayName: name.trim()
   };
   meds.push(newMed);
