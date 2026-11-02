@@ -1,13 +1,11 @@
 let recognition = null;
 let isListening = false;
 let callbacks = {};
-// Résultats finaux déjà livrés, par index de résultat. Chrome Android
-// re-livre parfois un même index : d'abord un fragment, puis la version
-// complète (bug observé : « message message de test »). On déduplique :
-// - index nouveau → livré une fois ;
-// - même index, même texte → ignoré ;
-// - même index, texte différent → correction (remplacement).
-let deliveredFinals = new Map();
+// Dernier fragment final livré. Chrome Android re-livre le même énoncé
+// en fragments croissants (« salade », « salade de », « salade de lentilles »),
+// à des indices différents selon les événements. On déduplique par contenu :
+// - identique → ignoré ; préfixe qui s'allonge → révision ; sinon → ajout.
+let lastFinal = "";
 
 export function initVoice(onResult, onError, onEnd, onCorrection) {
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -25,6 +23,10 @@ export function initVoice(onResult, onError, onEnd, onCorrection) {
   callbacks = { onResult, onError, onEnd, onCorrection };
 
   recognition.onresult = (event) => {
+    // Suivi par CONTENU (le suivi par index a échoué sur Chrome Android :
+    // les fragments re-livrés arrivent à des indices différents à chaque fois).
+    // Règles : identique au précédent → ignoré ; prolonge le précédent
+    // (préfixe) → révision (remplacement) ; sinon → nouvel ajout.
     let newText = "";
     let corrections = [];
     for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -32,15 +34,13 @@ export function initVoice(onResult, onError, onEnd, onCorrection) {
       if (!res.isFinal) continue;
       const text = (res[0].transcript || "").trim();
       if (!text) continue;
-      const prev = deliveredFinals.get(i);
-      if (prev === undefined) {
-        deliveredFinals.set(i, text);
-        newText += (newText ? " " : "") + text;
-      } else if (text !== prev) {
-        deliveredFinals.set(i, text);
-        corrections.push({ from: prev, to: text });
+      if (text === lastFinal) continue;                 // répétition exacte
+      if (lastFinal && text.startsWith(lastFinal)) {    // révision : le fragment s'allonge
+        corrections.push({ from: lastFinal, to: text });
+      } else {
+        newText += (newText ? " " : "") + text;          // nouvel énoncé
       }
-      // même index + même texte → déjà livré, ignoré
+      lastFinal = text;
     }
     if (newText && callbacks.onResult) {
       callbacks.onResult(newText);
@@ -66,7 +66,7 @@ export function initVoice(onResult, onError, onEnd, onCorrection) {
 export function startVoice() {
   if (!recognition || isListening) return false;
   try {
-    deliveredFinals = new Map();
+    lastFinal = "";
     recognition.start();
     isListening = true;
     return true;

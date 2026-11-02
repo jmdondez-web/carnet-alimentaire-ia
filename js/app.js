@@ -90,13 +90,16 @@ async function init() {
       if (status) status.innerText = "Dictée terminée";
     },
     (corrections) => {
-      // Chrome Android re-livre parfois un résultat final corrigé :
-      // remplacer le fragment déjà inséré par la version complète.
+      // Chrome Android re-livre l'énoncé en fragments croissants :
+      // remplacer la DERNIÈRE occurrence du fragment par la version complète
+      // (le fragment peut aussi exister plus tôt, saisi manuellement).
       const ta = document.getElementById("mealText");
+      const replaceLast = (str, from, to) => {
+        const i = str.lastIndexOf(from);
+        return i === -1 ? str : str.slice(0, i) + to + str.slice(i + from.length);
+      };
       for (const c of corrections) {
-        if (ta.value.includes(c.from)) {
-          ta.value = ta.value.replace(c.from, c.to);
-        }
+        ta.value = replaceLast(ta.value, c.from, c.to);
       }
       persistDraft();
     }
