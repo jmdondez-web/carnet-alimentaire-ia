@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Carnet Alimentaire — À propos</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2E7D32">
+</head>
+<body>
+  <div class="subpage">
+    <a href="index.html" class="back-link">← Accueil</a>
+    <h1>ℹ️ À propos de ce carnet</h1>
+    <p class="subtitle">Cadre d'usage, sources et limites — à lire avant d'évaluer.</p>
+
+    <h2>📌 Cadre d'usage</h2>
+    <div class="trends-critique">Ce carnet est un outil d'éducation alimentaire. Il ne fait pas de diagnostic, ne prescrit rien, ne compte pas de calories et ne remplace ni médecin, ni diététicien·ne, ni pharmacien·ne. Les alertes d'interactions aliment-médicament sont des rappels éducatifs : toute décision relève d'un professionnel de santé.</div>
+
+    <h2>📚 Sources</h2>
+    <div class="trends-critique">Repères nutritionnels : PNNS (Programme National Nutrition Santé, France) — 5 fruits et légumes/jour, hydratation ~1,5 L/jour, limitation des aliments gras et sucrés.
+Base d'interactions aliment-médicament : fiche de connaissances intégrée, vérifiable dans connaissances.json (aliment, médicaments concernés, gravité, message).</div>
+
+    <h2>🤖 Intelligence artificielle — transparence</h2>
+    <div class="trends-critique">Deux moteurs, toujours signalés à l'utilisateur :
+• Analyse locale : règles prédéfinies exécutées sur votre appareil, aucune IA, aucune donnée ne sort.
+• IA externe (optionnelle, sur consentement explicite RGPD) : Mistral AI, société française, hébergement européen. Les données sont transmises uniquement le temps de l'analyse et jamais stockées côté serveur.
+Chaque analyse affiche son origine (badge local ou badge Mistral). En cas d'échec de l'IA externe, repli automatique sur l'analyse locale, avec la raison affichée.</div>
+
+    <h2>⚠️ Limites assumées</h2>
+    <div class="trends-critique">• La détection d'aliments repose sur des mots-clés : plats composés, orthographes inattendues et synonymes manquants peuvent être ignorés.
+• Sans grammage indiqué, chaque aliment vaut une portion individuelle standard (hypothèse affichée dans les tendances et sur les impressions).
+• La dictée vocale dépend du navigateur : Chrome/Edge sur Android, Safari sur iOS. Firefox non pris en charge.
+• Les tendances sont indicatives : elles mesurent des présences d'aliments, pas des quantités réelles.</div>
+
+    <h2>🔒 Données & RGPD</h2>
+    <div class="trends-critique">Toutes les données (repas, traitements, eau) restent sur votre téléphone (localStorage). Export et suppression complets disponibles dans les réglages. Le mode IA externe exige un consentement explicite (données de santé, RGPD Art. 9), révocable à tout moment. Aucune donnée n'est vendue ni partagée. Les données d'un testeur ne sont jamais visibles par un autre testeur ni par l'équipe.</div>
+  </div>
+</body>
+</html>

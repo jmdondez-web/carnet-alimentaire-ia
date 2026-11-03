@@ -191,3 +191,4 @@ body.dark .dash-details > div { border-color:rgba(255,255,255,.05); }
 .trends-critique { background:var(--card); border-radius:var(--radius-sm); padding:var(--sp-2); box-shadow:var(--shadow); margin:var(--sp-1) 0; white-space:pre-wrap; font-size:var(--fs-sm); line-height:1.5; }
 .privacy-note { font-size:var(--fs-xs); color:var(--muted); margin-top:var(--sp-2); }
 .fam-note { font-size:var(--fs-xs); color:var(--muted); margin:var(--sp-1) 0 0; }
+.privacy-footer a { color:var(--green); }
