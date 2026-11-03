@@ -113,11 +113,22 @@ async function init() {
     if (status) status.innerText = "Dictée non supportée par ce navigateur (essaie Chrome)";
   }
 
-  // Version de l'appli — source unique : manifest.json
+  // Version déployée — version.txt (date + commit, généré par update.sh) prioritaire,
+  // manifest.json en repli. Distingue plusieurs déploiements le même jour.
   try {
-    const manifest = await fetch("manifest.json").then(r => r.json());
     const el = document.getElementById("appVersion");
-    if (el && manifest.version) el.textContent = "v" + manifest.version;
+    if (el) {
+      let label = "";
+      try {
+        const r = await fetch("version.txt", { cache: "no-store" });
+        if (r.ok) label = (await r.text()).trim();
+      } catch (e) {}
+      if (!label) {
+        const manifest = await fetch("manifest.json").then(r => r.json());
+        if (manifest.version) label = "v" + manifest.version;
+      }
+      el.textContent = label;
+    }
   } catch (e) { /* hors ligne ou indisponible : badge vide */ }
 
   bindEvents();
@@ -227,6 +238,9 @@ function bindEvents() {
   // Export
   document.getElementById("exportBtn").onclick = () => Export.exportJSON(repasList);
   document.getElementById("exportReadableBtn").onclick = () => Export.exportReadable(repasList);
+  // Impression (PDF ou imprimante) + page tendances
+  document.getElementById("printNavBtn").onclick = () => { window.location.href = "print.html"; };
+  document.getElementById("trendsNavBtn").onclick = () => { window.location.href = "tendances.html"; };
 
   // Effacer tout
   document.getElementById("clearAllBtn").onclick = () => {

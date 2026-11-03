@@ -167,3 +167,26 @@ body.dark .dash-details > div { border-color:rgba(255,255,255,.05); }
 .water-hist-scale { font-size:var(--fs-xs); color:var(--muted); margin:var(--sp-1) 0 0; }
 .water-hist-empty { font-size:var(--fs-sm); color:var(--muted); margin:0; }
 @keyframes waterbar { from { height:0; } }
+
+/* ============================================================
+   Pages secondaires : tendances & impression
+   ============================================================ */
+.subpage { max-width:720px; margin:0 auto; padding:var(--sp-2); }
+.subpage h1 { font-size:var(--fs-lg); margin-bottom:2px; }
+.subpage h2 { font-size:var(--fs-md); margin:var(--sp-3) 0 var(--sp-1); }
+.back-link { display:inline-block; margin:var(--sp-1) 0; color:var(--green); text-decoration:none; font-size:var(--fs-sm); }
+.ia-type-badge { display:inline-block; font-size:var(--fs-xs); padding:4px 10px; border-radius:10px; margin:var(--sp-1) 0; background:var(--green-soft); color:var(--text); }
+.ia-type-badge.local { background:#e8e8e8; }
+.trends-controls { display:flex; gap:var(--sp-2); align-items:center; margin:var(--sp-1) 0; font-size:var(--fs-sm); }
+.trends-controls select { padding:6px 8px; border-radius:8px; border:1px solid #ccc; font-size:var(--fs-sm); }
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:var(--sp-2); margin:var(--sp-2) 0; }
+.stat-card { background:var(--card); border-radius:var(--radius-sm); padding:var(--sp-2); box-shadow:var(--shadow); }
+.stat-card .stat-value { font-size:var(--fs-xl); font-weight:bold; color:var(--green); }
+.stat-card .stat-label { font-size:var(--fs-sm); color:var(--muted); }
+.fam-row { display:flex; align-items:center; gap:var(--sp-1); margin:6px 0; font-size:var(--fs-sm); }
+.fam-name { flex:0 0 150px; }
+.fam-bar { flex:1; height:14px; background:var(--green-soft); border-radius:7px; overflow:hidden; }
+.fam-fill { height:100%; background:var(--green); border-radius:7px; }
+.fam-count { flex:0 0 auto; color:var(--muted); font-size:var(--fs-xs); }
+.trends-critique { background:var(--card); border-radius:var(--radius-sm); padding:var(--sp-2); box-shadow:var(--shadow); margin:var(--sp-1) 0; white-space:pre-wrap; font-size:var(--fs-sm); line-height:1.5; }
+.privacy-note { font-size:var(--fs-xs); color:var(--muted); margin-top:var(--sp-2); }
