@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carnet Alimentaire — Impression</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background:#fff; color:#111; margin:16px; }
+    .no-print { margin-bottom:16px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .no-print a, .no-print button, .no-print select {
+      font-size:14px; padding:6px 12px; border-radius:8px; border:1px solid #2E7D32;
+      background:#fff; color:#2E7D32; text-decoration:none; cursor:pointer;
+    }
+    .no-print button.primary { background:#2E7D32; color:#fff; }
+    h1 { font-size:20px; margin:8px 0 2px; }
+    .meta { font-size:12px; color:#555; margin-bottom:14px; }
+    h2 { font-size:16px; margin:18px 0 6px; border-bottom:2px solid #2E7D32; padding-bottom:2px; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { border:1px solid #999; padding:4px 6px; font-size:11px; text-align:left; vertical-align:top; }
+    th { background:#eee; }
+    .total-row td { font-weight:bold; background:#f4f6f4; }
+    .alert-cell { color:#b45309; }
+    @media print { .no-print { display:none; } body { margin:0; } }
+  </style>
+</head>
+<body>
+  <div class="no-print">
+    <a href="index.html">← Retour</a>
+    <label>Période :
+      <select id="periodSelect">
+        <option value="2">2 jours</option>
+        <option value="7" selected>7 jours</option>
+        <option value="14">14 jours</option>
+        <option value="30">30 jours</option>
+        <option value="0">Tout l'historique</option>
+      </select>
+    </label>
+    <button id="printBtn" class="primary">🖨️ Imprimer / Enregistrer en PDF</button>
+  </div>
+  <h1>📘 Carnet Alimentaire — Repas & hydratation</h1>
+  <p class="meta" id="docMeta"></p>
+  <div id="docContent"></div>
+  <script type="module" src="js/print.js"></script>
+</body>
+</html>

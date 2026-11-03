@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Carnet Alimentaire — Tendances</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2E7D32">
+</head>
+<body>
+  <div class="subpage">
+    <a href="index.html" class="back-link">← Accueil</a>
+    <h1>📈 Tendances alimentaires</h1>
+    <p class="subtitle">Analyse éducative de vos habitudes — pas un avis médical.</p>
+
+    <div class="trends-controls no-print">
+      <label>Période :
+        <select id="trendsPeriod">
+          <option value="7">7 jours</option>
+          <option value="30" selected>30 jours</option>
+          <option value="90">90 jours</option>
+          <option value="0">Tout l'historique</option>
+        </select>
+      </label>
+      <button id="trendsRefreshBtn" class="btn btn-secondary btn-sm">🔄 Recalculer</button>
+    </div>
+
+    <div id="trendsStats" class="stat-grid"></div>
+
+    <h2>Familles d'aliments détectées</h2>
+    <div id="trendsFamilies"></div>
+
+    <h2>Critique</h2>
+    <div id="trendsIABadge" class="ia-type-badge"></div>
+    <div id="trendsCritique" class="trends-critique"></div>
+
+    <p class="privacy-note">🔒 Les données restent sur votre téléphone. En mode IA externe
+    (paramétré avec consentement), les descriptions de repas sont transmises le temps de
+    l'analyse et jamais stockées côté serveur.</p>
+  </div>
+  <script type="module" src="js/trends.js"></script>
+</body>
+</html>

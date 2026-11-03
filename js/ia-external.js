@@ -110,3 +110,63 @@ export async function analyseRepas(mealText, photoBase64, userMeds, healthCondit
     return { success: false, error: e.message };
   }
 }
+
+
+const TRENDS_SYSTEM_PROMPT = `Tu es un assistant d'éducation alimentaire, PAS un médecin.
+
+RÈGLES :
+- Pas de diagnostic, pas de prescription, pas de calories, pas de jugement de valeur sur la personne.
+- Analyse les TENDANCES alimentaires sur la période donnée (fréquences, hydratation, familles d'aliments).
+- Structure : 1) points positifs, 2) points d'attention, 3) un repère éducatif PNNS concret.
+- Maximum 10 lignes, en français, ton neutre et encourageant.`;
+
+// Analyse des tendances : même proxy que l'analyse de repas, prompt dédié.
+export async function analyseTendances(userPrompt) {
+  const settings = getIASettings();
+  if (settings.mode !== "external") {
+    return { success: false, error: "Mode externe non activé" };
+  }
+  const useProxy = !settings.apiKey;
+  const body = {
+    messages: [
+      { role: "system", content: TRENDS_SYSTEM_PROMPT },
+      { role: "user", content: userPrompt }
+    ],
+    vision: false,
+    clientId: getClientId()
+  };
+  try {
+    let data;
+    if (useProxy) {
+      const response = await fetch("/api/analyse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) {
+        return { success: false, error: "Proxy " + response.status };
+      }
+      data = await response.json();
+    } else {
+      const config = getAPIConfig();
+      body.model = config.model;
+      body.max_tokens = 600;
+      body.temperature = 0.4;
+      const response = await fetch(config.url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + settings.apiKey
+        },
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) {
+        return { success: false, error: "API error " + response.status };
+      }
+      data = await response.json();
+    }
+    return { success: true, analysis: data.choices?.[0]?.message?.content || "" };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
