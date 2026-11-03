@@ -1,10 +1,14 @@
 // Tendances alimentaires : stats locales + critique locale OU IA externe.
 // Transparence obligatoire : le badge signale TOUJOURS quel type d'analyse a produit la critique.
+// Fonctions pures exportées (tests : tests/run-tests.mjs) — pas de DOM ni localStorage dedans.
 import * as Storage from './storage.js';
 import { getIASettings, hasValidAPIKey } from './ia-settings.js';
 import { analyseTendances } from './ia-external.js';
 
-const FAMILLES = [
+// HYPOTHÈSE PORTEUR DU PRODUIT : sans grammage indiqué, chaque aliment mentionné
+// compte pour UNE portion individuelle standard (ex. 1 part de fruit, 1 tranche de pain).
+// Les quantités explicites ne sont pas encore parsées (limite assumée, documentée).
+export const FAMILLES = [
   { nom: "Fruits & légumes", mots: ["fruit", "legume", "salade", "tomate", "pomme", "banane", "orange", "poire", "carotte", "brocoli", "epinard", "courgette", "haricot", "lentille", "chou", "soupe", "crudite", "potiron", "radis", "concombre", "fraise", "framboise", "citron", "pamplemousse", "avocat"] },
   { nom: "Féculents & céréales", mots: ["pain", "riz", "pate", "pomme de terre", "patate", "semoule", "ble", "boulgour", "quinoa", "avoine", "cereal", "bagel", "tartine", "croissant", "brioche", "polenta", "gnocchi"] },
   { nom: "Produits laitiers", mots: ["yaourt", "lait", "fromage", "beurre", "creme", "kefir", "faisselle"] },
@@ -12,39 +16,32 @@ const FAMILLES = [
   { nom: "Plats gras ou sucrés", mots: ["frite", "pizza", "burger", "hamburger", "kebab", "snack", "chips", "chocolat", "cookie", "gateau", "patisserie", "bonbon", "sucre", "soda", "coca", "biere", "vin", "alcool", "aperitif", "charcuterie"] }
 ];
 
-function normalize(t) {
+export function normalize(t) {
   return (t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-function escapeHtml(str) {
-  if (!str) return "";
-  return String(str).replace(/[&<>]/g, function(m) {
-    if (m === "&") return "&amp;";
-    if (m === "<") return "&lt;";
-    return "&gt;";
-  });
-}
-
-function computeStats(days) {
+export function computeStats(days, data) {
+  const meals = (data && data.meals) || [];
+  const waterRaw = (data && data.water) || {};
   const limit = days ? Date.now() - days * 86400000 : 0;
-  const meals = Storage.loadRepas().filter(function(m) {
+  const filtered = meals.filter(function(m) {
     return new Date(m.datetime).getTime() >= limit;
   });
 
+  // Portions standard : 1 portion par famille mentionnée par repas.
   const famCounts = FAMILLES.map(function(f) {
     return {
       nom: f.nom,
-      repas: meals.filter(function(m) {
+      portions: filtered.filter(function(m) {
         const t = normalize(m.text);
         return f.mots.some(function(w) { return t.includes(normalize(w)); });
       }).length
     };
   });
 
-  const water = Storage.loadWaterHistory();
   let waterSum = 0;
   let firstDate = null;
-  for (const entry of Object.entries(water)) {
+  for (const entry of Object.entries(waterRaw)) {
     const total = Array.isArray(entry[1])
       ? entry[1].reduce(function(s, e) { return s + (e.cl || 0); }, 0)
       : (typeof entry[1] === "number" ? entry[1] : 0);
@@ -58,7 +55,7 @@ function computeStats(days) {
 
   let span = days;
   if (!span) {
-    const dates = meals.map(function(m) { return m.datetime.slice(0, 10); });
+    const dates = filtered.map(function(m) { return m.datetime.slice(0, 10); });
     if (firstDate) dates.push(firstDate);
     if (dates.length) {
       const min = Math.min.apply(null, dates.map(function(d) { return new Date(d).getTime(); }));
@@ -68,28 +65,29 @@ function computeStats(days) {
 
   return {
     days: days || span,
-    meals: meals,
+    meals: filtered,
     famCounts: famCounts,
-    avgRepas: meals.length / span,
+    avgRepas: filtered.length / span,
     avgEau: waterSum / span,
-    alertes: meals.filter(function(m) { return !!m.interactionDetected; }).length
+    alertes: filtered.filter(function(m) { return !!m.interactionDetected; }).length
   };
 }
 
-function critiqueLocale(stats) {
+export function critiqueLocale(stats) {
   const L = [];
   L.push("Points observés sur la période (" + stats.days + " jours) :");
+  L.push("Hypothèse : sans grammage, chaque aliment vaut une portion individuelle standard.");
   const nb = stats.meals.length;
   if (nb === 0) {
     L.push("- Aucun repas enregistré sur la période : impossible de dégager une tendance.");
   } else {
     L.push("- " + nb + " repas enregistrés (" + stats.avgRepas.toFixed(1) + "/jour en moyenne).");
     const fl = stats.famCounts.filter(function(f) { return f.nom === "Fruits & légumes"; })[0];
-    if (nb >= 5 && fl && fl.repas / nb < 0.5) {
-      L.push("- Fruits & légumes présents dans moins d'un repas sur deux : le repère PNNS est de 5 par jour.");
+    if (nb >= 5 && fl && fl.portions / nb < 0.5) {
+      L.push("- Fruits & légumes présents dans moins d'un repas sur deux : le repère PNNS est de 5 portions par jour.");
     }
     const gras = stats.famCounts.filter(function(f) { return f.nom === "Plats gras ou sucrés"; })[0];
-    if (nb >= 5 && gras && gras.repas / nb > 0.4) {
+    if (nb >= 5 && gras && gras.portions / nb > 0.4) {
       L.push("- Aliments gras ou sucrés fréquents (plus de 4 repas sur 10) : le PNNS recommande d'en limiter la fréquence.");
     }
     if (stats.avgEau > 0 && stats.avgEau < 100) {
@@ -106,8 +104,8 @@ function critiqueLocale(stats) {
   return L.join("\n");
 }
 
-function buildExternalPrompt(stats) {
-  const famText = stats.famCounts.map(function(f) { return f.nom + " : " + f.repas + " repas"; }).join("\n");
+export function buildExternalPrompt(stats) {
+  const famText = stats.famCounts.map(function(f) { return f.nom + " : " + f.portions + " portions (standard)"; }).join("\n");
   const mealsText = stats.meals.slice(0, 80).map(function(m) {
     return "- " + m.text;
   }).join("\n");
@@ -115,8 +113,18 @@ function buildExternalPrompt(stats) {
     "Repas enregistrés : " + stats.meals.length + " (" + stats.avgRepas.toFixed(1) + "/jour)\n" +
     "Eau moyenne : " + Math.round(stats.avgEau) + " cl/jour (repère ~150 cl)\n" +
     "Alertes d'interactions relevées : " + stats.alertes + "\n" +
+    "HYPOTHÈSE : en l'absence de grammage indiqué, considère chaque aliment comme une portion individuelle standard.\n" +
     "Familles d'aliments détectées :\n" + famText + "\n\n" +
-    "Descriptions des repas (les plus récents d'abord) :\n" + (mealsText || "Aucun");
+    "Descriptions des repas (les plus récents d'abord, max 80) :\n" + (mealsText || "Aucun");
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str).replace(/[&<>]/g, function(m) {
+    if (m === "&") return "&amp;";
+    if (m === "<") return "&lt;";
+    return "&gt;";
+  });
 }
 
 function renderStats(stats) {
@@ -134,13 +142,14 @@ function renderStats(stats) {
 
   const famEl = document.getElementById("trendsFamilies");
   if (famEl) {
-    const max = Math.max.apply(null, stats.famCounts.map(function(f) { return f.repas; }).concat([1]));
+    const max = Math.max.apply(null, stats.famCounts.map(function(f) { return f.portions; }).concat([1]));
     famEl.innerHTML = stats.famCounts.map(function(f) {
-      const pct = Math.round(100 * f.repas / max);
+      const pct = Math.round(100 * f.portions / max);
       return "<div class='fam-row'><span class='fam-name'>" + escapeHtml(f.nom) + "</span>" +
         "<div class='fam-bar'><div class='fam-fill' style='width:" + pct + "%'></div></div>" +
-        "<span class='fam-count'>" + f.repas + " repas</span></div>";
-    }).join("");
+        "<span class='fam-count'>≈ " + f.portions + " portions</span></div>";
+    }).join("") +
+    "<p class='fam-note'>Estimation : 1 portion individuelle standard par famille mentionnée (grammages non analysés).</p>";
   }
 }
 
@@ -187,12 +196,18 @@ function currentPeriodDays() {
 }
 
 async function refresh() {
-  const stats = computeStats(currentPeriodDays());
+  const stats = computeStats(currentPeriodDays(), {
+    meals: Storage.loadRepas(),
+    water: Storage.loadWaterHistory()
+  });
   renderStats(stats);
   await runCritique(stats);
 }
 
-document.getElementById("trendsRefreshBtn").onclick = refresh;
-const periodSel = document.getElementById("trendsPeriod");
-if (periodSel) periodSel.onchange = refresh;
-refresh();
+// Garde DOM : module importable dans Node pour les tests
+if (typeof document !== "undefined") {
+  document.getElementById("trendsRefreshBtn").onclick = refresh;
+  const periodSel = document.getElementById("trendsPeriod");
+  if (periodSel) periodSel.onchange = refresh;
+  refresh();
+}

@@ -1,5 +1,34 @@
 // Impression repas + eau : page autonome, lit localStorage (même origine).
+// Fonctions de filtrage pures et exportées (tests : tests/run-tests.mjs).
 import * as Storage from './storage.js';
+
+export function filterMealsByDays(meals, days, now) {
+  const ref = now || Date.now();
+  const all = (meals || []).slice();
+  all.sort(function(a, b) { return new Date(b.datetime) - new Date(a.datetime); });
+  if (!days) return all;
+  const limit = ref - days * 86400000;
+  return all.filter(function(m) { return new Date(m.datetime).getTime() >= limit; });
+}
+
+export function waterRowsByDays(raw, days, now) {
+  const ref = now || Date.now();
+  const rows = [];
+  for (const entry of Object.entries(raw || {})) {
+    const date = entry[0];
+    const val = entry[1];
+    let total = 0;
+    if (Array.isArray(val)) total = val.reduce(function(s, e) { return s + (e.cl || 0); }, 0);
+    else if (typeof val === "number") total = val;
+    rows.push({ date: date, total: total });
+  }
+  rows.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  if (days) {
+    const limitDate = new Date(ref - days * 86400000).toISOString().slice(0, 10);
+    return rows.filter(function(r) { return r.date >= limitDate; });
+  }
+  return rows;
+}
 
 function escapeHtml(str) {
   if (!str) return "";
@@ -21,33 +50,6 @@ function currentDays() {
   return [2, 7, 14, 30, 0].includes(n) ? n : 7;
 }
 
-function filterMeals(days) {
-  const all = Storage.loadRepas().slice();
-  all.sort(function(a, b) { return new Date(b.datetime) - new Date(a.datetime); });
-  if (!days) return all;
-  const limit = Date.now() - days * 86400000;
-  return all.filter(function(m) { return new Date(m.datetime).getTime() >= limit; });
-}
-
-function waterRows(days) {
-  const raw = Storage.loadWaterHistory();
-  const rows = [];
-  for (const entry of Object.entries(raw)) {
-    const date = entry[0];
-    const val = entry[1];
-    let total = 0;
-    if (Array.isArray(val)) total = val.reduce(function(s, e) { return s + (e.cl || 0); }, 0);
-    else if (typeof val === "number") total = val;
-    rows.push({ date: date, total: total });
-  }
-  rows.sort(function(a, b) { return b.date.localeCompare(a.date); });
-  if (days) {
-    const limitDate = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
-    return rows.filter(function(r) { return r.date >= limitDate; });
-  }
-  return rows;
-}
-
 async function fetchVersion() {
   try {
     const r = await fetch("version.txt", { cache: "no-store" });
@@ -61,8 +63,8 @@ async function render() {
   const select = document.getElementById("periodSelect");
   if (select) select.value = String(days);
 
-  const meals = filterMeals(days);
-  const water = waterRows(days);
+  const meals = filterMealsByDays(Storage.loadRepas(), days);
+  const water = waterRowsByDays(Storage.loadWaterHistory(), days);
   const waterTotal = water.reduce(function(s, r) { return s + r.total; }, 0);
   const version = await fetchVersion();
   const periodLabel = days ? days + " derniers jours" : "historique complet";
@@ -70,8 +72,7 @@ async function render() {
     "Période : " + periodLabel +
     " · Édité le " + new Date().toLocaleString("fr-BE") +
     (version ? " · Version " + version : "") +
-    " · Document éducatif, sans valeur médicale.";
-
+    " · Document éducatif, sans valeur médicale. Portions non détaillées : estimation.";
   let html = "";
 
   html += "<h2>💧 Hydratation</h2>";
@@ -100,14 +101,17 @@ async function render() {
   document.getElementById("docContent").innerHTML = html;
 }
 
-document.getElementById("printBtn").onclick = function() { window.print(); };
-const sel = document.getElementById("periodSelect");
-if (sel) sel.onchange = function() {
-  const days = parseInt(sel.value);
-  const url = new URL(location.href);
-  if (days) url.searchParams.set("days", String(days));
-  else url.searchParams.delete("days");
-  history.replaceState(null, "", url);
+// Garde DOM : module importable dans Node pour les tests (aucune dépendance navigateur au chargement)
+if (typeof document !== "undefined") {
+  document.getElementById("printBtn").onclick = function() { window.print(); };
+  const sel = document.getElementById("periodSelect");
+  if (sel) sel.onchange = function() {
+    const days = parseInt(sel.value);
+    const url = new URL(location.href);
+    if (days) url.searchParams.set("days", String(days));
+    else url.searchParams.delete("days");
+    history.replaceState(null, "", url);
+    render();
+  };
   render();
-};
-render();
+}

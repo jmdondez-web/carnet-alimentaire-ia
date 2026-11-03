@@ -7,6 +7,15 @@ let callbacks = {};
 // - identique → ignoré ; préfixe qui s'allonge → révision ; sinon → ajout.
 let lastFinal = "";
 
+// Logique de déduplication dictée — pure, testée dans tests/run-tests.mjs.
+// Chrome Android re-livre l'énoncé en fragments croissants à des indices
+// différents : identique → ignoré ; prolonge le précédent → révision ; sinon → ajout.
+export function classifyFinal(text, lastFinal) {
+  if (text === lastFinal) return { action: "ignore" };
+  if (lastFinal && text.startsWith(lastFinal)) return { action: "revise", from: lastFinal, to: text };
+  return { action: "append", text: text };
+}
+
 export function initVoice(onResult, onError, onEnd, onCorrection) {
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
     console.error("Dictée non supportée");
@@ -23,10 +32,6 @@ export function initVoice(onResult, onError, onEnd, onCorrection) {
   callbacks = { onResult, onError, onEnd, onCorrection };
 
   recognition.onresult = (event) => {
-    // Suivi par CONTENU (le suivi par index a échoué sur Chrome Android :
-    // les fragments re-livrés arrivent à des indices différents à chaque fois).
-    // Règles : identique au précédent → ignoré ; prolonge le précédent
-    // (préfixe) → révision (remplacement) ; sinon → nouvel ajout.
     let newText = "";
     let corrections = [];
     for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -34,11 +39,11 @@ export function initVoice(onResult, onError, onEnd, onCorrection) {
       if (!res.isFinal) continue;
       const text = (res[0].transcript || "").trim();
       if (!text) continue;
-      if (text === lastFinal) continue;                 // répétition exacte
-      if (lastFinal && text.startsWith(lastFinal)) {    // révision : le fragment s'allonge
-        corrections.push({ from: lastFinal, to: text });
-      } else {
-        newText += (newText ? " " : "") + text;          // nouvel énoncé
+      const verdict = classifyFinal(text, lastFinal);
+      if (verdict.action === "append") {
+        newText += (newText ? " " : "") + verdict.text;
+      } else if (verdict.action === "revise") {
+        corrections.push({ from: verdict.from, to: verdict.to });
       }
       lastFinal = text;
     }
