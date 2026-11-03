@@ -136,7 +136,8 @@ export async function analyseRepas(mealText, photoBase64, userMeds, healthCondit
         analysis: externalResult.analysis,
         interaction: hasInteraction ? { message: externalResult.analysis, gravite: "attention", source: "external" } : null,
         source: "external",
-        provider: settings.provider
+        provider: settings.provider,
+        photoVerdict: externalResult.photoVerdict || null
       };
     } else {
       const localResult = detectInteractionLocal(mealText, userMeds, healthConditions);
