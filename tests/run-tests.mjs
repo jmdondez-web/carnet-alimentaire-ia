@@ -85,26 +85,42 @@ const data30 = {
   }
 };
 test("stats : périmètre 30 jours exclu le repas hors période", () => {
-  const s = computeStats(30, data30);
+  const s = computeStats(30, data30, NOW);
   assert.equal(s.meals.length, 4);
   assert.equal(s.alertes, 1);
 });
 test("stats : portions standard par famille (salade → fruits & légumes)", () => {
-  const s = computeStats(30, data30);
+  const s = computeStats(30, data30, NOW);
   const fl = s.famCounts.find(f => f.nom === "Fruits & légumes");
   const gras = s.famCounts.find(f => f.nom === "Plats gras ou sucrés");
-  assert.equal(fl.portions, 3); // salade, soupe de légumes, salade(hors période non comptée)
-  assert.equal(gras.portions, 2); // pizza, frites
+  assert.equal(fl.portions, 2); // 2 repas avec fruits & légumes (salade de lentilles, soupe) ; le « salade » hors période n'est pas compté
+  assert.equal(gras.portions, 2); // 2 repas avec plat gras/sucré (pizza, steak frites)
 });
 test("stats : eau moyenne sur la période (diviseur = jours de période)", () => {
-  const s = computeStats(30, data30);
+  const s = computeStats(30, data30, NOW);
   assert.equal(Math.round(s.avgEau), Math.round(230 / 30));
 });
 test("critique locale : mentionne l'hypothèse portion standard", () => {
-  const s = computeStats(30, data30);
+  const s = computeStats(30, data30, NOW);
   const txt = critiqueLocale(s);
   assert.ok(txt.includes("portion individuelle standard"));
-  assert.ok(txt.includes("5 portions"));
+});
+test("critique locale : alerte PNNS 5 portions si fruits & légumes rares", () => {
+  // 6 repas (seuil de déclenchement), fruits & légumes dans 1 repas sur 6 (< 1/2)
+  const dataLowFl = {
+    meals: [
+      { datetime: "2026-11-03T08:00", text: "pain et beurre" },
+      { datetime: "2026-11-03T12:00", text: "pâtes au fromage" },
+      { datetime: "2026-11-02T12:00", text: "steak frites" },
+      { datetime: "2026-11-02T19:00", text: "riz et poulet" },
+      { datetime: "2026-11-01T12:00", text: "pizza" },
+      { datetime: "2026-11-01T19:00", text: "salade verte" }
+    ],
+    water: {}
+  };
+  const s = computeStats(30, dataLowFl, NOW);
+  const txt = critiqueLocale(s);
+  assert.ok(txt.includes("5 portions par jour"));
 });
 
 console.log("Reconnaissance photo (verdict) :");

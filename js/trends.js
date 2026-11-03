@@ -20,10 +20,12 @@ export function normalize(t) {
   return (t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-export function computeStats(days, data) {
+export function computeStats(days, data, now) {
   const meals = (data && data.meals) || [];
   const waterRaw = (data && data.water) || {};
-  const limit = days ? Date.now() - days * 86400000 : 0;
+  // `now` injectable pour les tests (déterminisme) ; Date.now() en production.
+  const ref = now || Date.now();
+  const limit = days ? ref - days * 86400000 : 0;
   const filtered = meals.filter(function(m) {
     return new Date(m.datetime).getTime() >= limit;
   });
@@ -46,7 +48,7 @@ export function computeStats(days, data) {
       ? entry[1].reduce(function(s, e) { return s + (e.cl || 0); }, 0)
       : (typeof entry[1] === "number" ? entry[1] : 0);
     if (days) {
-      const lim = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+      const lim = new Date(ref - days * 86400000).toISOString().slice(0, 10);
       if (entry[0] < lim) continue;
     }
     waterSum += total;
@@ -59,7 +61,7 @@ export function computeStats(days, data) {
     if (firstDate) dates.push(firstDate);
     if (dates.length) {
       const min = Math.min.apply(null, dates.map(function(d) { return new Date(d).getTime(); }));
-      span = Math.max(1, Math.ceil((Date.now() - min) / 86400000));
+      span = Math.max(1, Math.ceil((ref - min) / 86400000));
     } else span = 1;
   }
 
