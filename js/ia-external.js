@@ -12,26 +12,45 @@ function getClientId() {
   return id;
 }
 
-const SYSTEM_PROMPT = `Tu es un assistant d'éducation alimentaire, PAS un médecin.
-
-RÈGLES :
-- Pas de diagnostic, pas de prescription, pas de calories, pas de jugement.
-- Pas de suggestions de repas.
-- Décris ce que contient le repas.
-- Si interaction possible, dis : "⚠️ Attention : [aliment] peut interagir avec [médicament]. Consulte ton médecin."
-- Si le repas contient un aliment correspondant à une allergie déclarée, alerte : "⚠️ Ton repas contient [aliment], déclaré comme allergie. Vérifie les étiquettes et consulte ton médecin. En cas de symptômes graves, appelle le 15/112."
-- Tiens compte des problèmes de santé déclarés (ex: hypertension → limiter le sel) de façon éducative, sans diagnostic.
-- Si aucune interaction : "Aucune interaction connue détectée."
-- Réponse courte, en français.`;
+const SYSTEM_PROMPT = [
+  "Tu es un assistant d'éducation alimentaire, PAS un médecin.",
+  "",
+  "RÈGLES :",
+  "- Pas de diagnostic, pas de prescription, pas de calories, pas de jugement.",
+  "- Pas de suggestions de repas.",
+  "- Décris ce que contient le repas.",
+  '- Si interaction possible, dis : "⚠️ Attention : [aliment] peut interagir avec [médicament]. Consulte ton médecin."',
+  '- Si le repas contient un aliment correspondant à une allergie déclarée, alerte : "⚠️ Ton repas contient [aliment], déclaré comme allergie. Vérifie les étiquettes et consulte ton médecin. En cas de symptômes graves, appelle le 15/112."',
+  "- Tiens compte des problèmes de santé déclarés (ex: hypertension → limiter le sel) de façon éducative, sans diagnostic.",
+  '- Si aucune interaction : "Aucune interaction connue détectée."',
+  "- Réponse courte, en français.",
+  "",
+  "PHOTO :",
+  "- Si un aliment de la photo n'est pas identifiable avec certitude, dis-le explicitement (« je ne peux pas identifier … »). Ne devine jamais, n'invente jamais un aliment.",
+  "- Termine ta réponse par une dernière ligne au format EXACT (sans autre texte après) :",
+  "  [VERDICT] ok          ← assiette entièrement identifiée (aussi sans photo)",
+  "  [VERDICT] partielle   ← certains éléments n'ont pas pu être identifiés",
+  "  [VERDICT] impossible  ← plat ou photo non exploitable"
+].join("\n");
 
 function buildMessages(mealText, userMeds, healthConditions, allergies) {
-  const medsText = (userMeds || []).map(m => `${m.displayName} (${m.condition || ''})`).join(", ");
+  const medsText = (userMeds || []).map(m => m.displayName + " (" + (m.condition || '') + ")").join(", ");
   const conditionsText = (healthConditions || []).join(", ");
   const allergiesText = (allergies || []).join(", ");
-  return `Repas : ${mealText || "Pas de description texte"}
-Médicaments : ${medsText || "Aucun"}
-Problèmes de santé : ${conditionsText || "Aucun"}
-Allergies/intolérances : ${allergiesText || "Aucune"}`;
+  return "Repas : " + (mealText || "Pas de description texte") + "\n" +
+         "Médicaments : " + (medsText || "Aucun") + "\n" +
+         "Problèmes de santé : " + (conditionsText || "Aucun") + "\n" +
+         "Allergies/intolérances : " + (allergiesText || "Aucune");
+}
+
+// Extraction du verdict de reconnaissance photo — pur, testé dans tests/run-tests.mjs.
+// Retire la ligne [VERDICT] du texte affiché et la renvoie à part.
+export function extractPhotoVerdict(raw) {
+  const text = raw || "";
+  const m = text.match(/\[VERDICT\]\s*(ok|partielle|impossible)/i);
+  const verdict = m ? m[1].toLowerCase() : null;
+  const analysis = text.replace(/\[VERDICT\][^\n]*$/im, "").trim();
+  return { analysis: analysis, verdict: verdict };
 }
 
 export async function analyseRepas(mealText, photoBase64, userMeds, healthConditions = [], allergies = []) {
@@ -83,7 +102,7 @@ export async function analyseRepas(mealText, photoBase64, userMeds, healthCondit
       });
       if (!response.ok) {
         const errText = await response.text();
-        return { success: false, error: `Proxy ${response.status}: ${errText}` };
+        return { success: false, error: "Proxy " + response.status + ": " + errText };
       }
       data = await response.json();
     } else {
@@ -99,26 +118,28 @@ export async function analyseRepas(mealText, photoBase64, userMeds, healthCondit
         body: JSON.stringify(body)
       });
       if (!response.ok) {
-        return { success: false, error: `API error ${response.status}` };
+        return { success: false, error: "API error " + response.status };
       }
       data = await response.json();
     }
 
-    const analysis = data.choices?.[0]?.message?.content || "Analyse non disponible";
-    return { success: true, analysis };
+    const parsed = extractPhotoVerdict(data.choices?.[0]?.message?.content || "Analyse non disponible");
+    return { success: true, analysis: parsed.analysis, photoVerdict: parsed.verdict };
   } catch(e) {
     return { success: false, error: e.message };
   }
 }
 
 
-const TRENDS_SYSTEM_PROMPT = `Tu es un assistant d'éducation alimentaire, PAS un médecin.
-
-RÈGLES :
-- Pas de diagnostic, pas de prescription, pas de calories, pas de jugement de valeur sur la personne.
-- Analyse les TENDANCES alimentaires sur la période donnée (fréquences, hydratation, familles d'aliments).
-- Structure : 1) points positifs, 2) points d'attention, 3) un repère éducatif PNNS concret.
-- Maximum 10 lignes, en français, ton neutre et encourageant.`;
+const TRENDS_SYSTEM_PROMPT = [
+  "Tu es un assistant d'éducation alimentaire, PAS un médecin.",
+  "",
+  "RÈGLES :",
+  "- Pas de diagnostic, pas de prescription, pas de calories, pas de jugement de valeur sur la personne.",
+  "- Analyse les TENDANCES alimentaires sur la période donnée (fréquences, hydratation, familles d'aliments).",
+  "- Structure : 1) points positifs, 2) points d'attention, 3) un repère éducatif PNNS concret.",
+  "- Maximum 10 lignes, en français, ton neutre et encourageant."
+].join("\n");
 
 // Analyse des tendances : même proxy que l'analyse de repas, prompt dédié.
 export async function analyseTendances(userPrompt) {

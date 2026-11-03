@@ -192,3 +192,8 @@ body.dark .dash-details > div { border-color:rgba(255,255,255,.05); }
 .privacy-note { font-size:var(--fs-xs); color:var(--muted); margin-top:var(--sp-2); }
 .fam-note { font-size:var(--fs-xs); color:var(--muted); margin:var(--sp-1) 0 0; }
 .privacy-footer a { color:var(--green); }
+
+/* ==== Note photo mode local + fenêtre flottante reconnaissance ==== */
+.photo-mode-note { font-size:var(--fs-xs); color:var(--amber); margin:var(--sp-1) 0 0; }
+.photo-notice { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); width:min(92%, 420px); background:var(--card); color:var(--text); border-radius:var(--radius-sm); box-shadow:0 4px 16px rgba(0,40,0,.25); padding:var(--sp-2); font-size:var(--fs-sm); z-index:9998; display:none; gap:var(--sp-1); align-items:flex-start; }
+.photo-notice button { border:0; background:transparent; cursor:pointer; font-size:var(--fs-md); padding:0 4px; }

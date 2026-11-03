@@ -11,6 +11,7 @@ import * as Navigation from './navigation.js';
 import * as UISettings from './ui-settings.js';
 import * as Dashboard from './dashboard.js';
 import * as MealModes from './meal-modes.js';
+import { getIASettings } from './ia-settings.js';
 
 let repasList = [];
 
@@ -192,6 +193,26 @@ function saveQuickMeal(meal) {
   analyseInBackground(newMeal);
 }
 
+// Fenêtre flottante : photo non ou partiellement reconnue (mode IA externe).
+// Honnêteté du produit : l'incertitude est AFFICHÉE, jamais masquée ni inventée.
+function showPhotoNotice(verdict) {
+  let el = document.getElementById("photoNotice");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "photoNotice";
+    el.className = "photo-notice";
+    document.body.appendChild(el);
+  }
+  const msg = verdict === "impossible"
+    ? "📷 Photo non exploitable : le plat n'a pas pu être reconnu. Aucune invention — décris ton repas en texte, ou reprends la photo de plus près."
+    : "🔍 Photo : certains aliments n'ont pas pu être identifiés avec certitude. Aucune invention — complète la description pour une analyse fiable.";
+  el.innerHTML = "<span>" + msg + "</span><button aria-label='Fermer'>✖️</button>";
+  el.querySelector("button").onclick = () => { el.style.display = "none"; };
+  el.style.display = "flex";
+  clearTimeout(showPhotoNotice._t);
+  showPhotoNotice._t = setTimeout(() => { el.style.display = "none"; }, 12000);
+}
+
 async function analyseInBackground(meal) {
   const userMeds = Medications.getMeds();
   const healthConditions = Storage.loadHealthConditions ? Storage.loadHealthConditions() : [];
@@ -199,6 +220,9 @@ async function analyseInBackground(meal) {
 
   try {
     const iaResult = await IA.analyseRepas(meal.text, meal.photo, userMeds, healthConditions, allergies);
+    if (iaResult.success && meal.photo && iaResult.photoVerdict && iaResult.photoVerdict !== "ok") {
+      showPhotoNotice(iaResult.photoVerdict);
+    }
     if (iaResult.success && iaResult.interaction) {
       meal.interactionDetected = iaResult.interaction;
       meal.iaSource = iaResult.source;
@@ -275,18 +299,31 @@ function bindEvents() {
     }
   };
 
-  // Photo
+  // Photo — note honnête en mode local : la photo n'est PAS analysée
+  const updatePhotoModeNote = () => {
+    const note = document.getElementById("photoModeNote");
+    if (!note) return;
+    const settings = getIASettings();
+    if (settings.mode !== "external") {
+      note.textContent = "📷 Votre photo n'est pas analysée en mode local (analyse par texte uniquement).";
+      note.style.display = "block";
+    } else {
+      note.style.display = "none";
+    }
+  };
   document.getElementById("takePhotoBtn").onclick = async () => {
     const base64 = await Camera.takePhoto();
-    if (base64) Camera.showPreview('photoPreview', 'previewImg', base64);
+    if (base64) { Camera.showPreview('photoPreview', 'previewImg', base64); updatePhotoModeNote(); }
   };
   document.getElementById("uploadPhotoBtn").onclick = async () => {
     const base64 = await Camera.uploadPhoto();
-    if (base64) Camera.showPreview('photoPreview', 'previewImg', base64);
+    if (base64) { Camera.showPreview('photoPreview', 'previewImg', base64); updatePhotoModeNote(); }
   };
   document.getElementById("removePhotoBtn").onclick = () => {
     Camera.clearCurrentPhoto();
     Camera.hidePreview('photoPreview');
+    const note = document.getElementById("photoModeNote");
+    if (note) note.style.display = "none";
   };
 
   // Fermeture alerte

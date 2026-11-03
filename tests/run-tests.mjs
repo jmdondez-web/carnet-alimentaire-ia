@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { classifyFinal } from "../js/voice.js";
 import { filterMealsByDays, waterRowsByDays } from "../js/print.js";
 import { computeStats, critiqueLocale, FAMILLES } from "../js/trends.js";
+import { extractPhotoVerdict } from "../js/ia-external.js";
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -104,6 +105,27 @@ test("critique locale : mentionne l'hypothèse portion standard", () => {
   const txt = critiqueLocale(s);
   assert.ok(txt.includes("portion individuelle standard"));
   assert.ok(txt.includes("5 portions"));
+});
+
+console.log("Reconnaissance photo (verdict) :");
+test("verdict ok extrait et retiré du texte affiché", () => {
+  const r = extractPhotoVerdict("Salade et poulet identifiés. Aucune interaction.\n[VERDICT] ok");
+  assert.equal(r.verdict, "ok");
+  assert.ok(!r.analysis.includes("[VERDICT]"));
+  assert.ok(r.analysis.includes("Salade"));
+});
+test("verdict partielle détecté", () => {
+  const r = extractPhotoVerdict("Je ne peux pas identifier l'élément brun à gauche.\n[VERDICT] partielle");
+  assert.equal(r.verdict, "partielle");
+});
+test("verdict impossible détecté", () => {
+  const r = extractPhotoVerdict("Photo non exploitable.\n[VERDICT] impossible");
+  assert.equal(r.verdict, "impossible");
+});
+test("absence de tag → verdict null, texte intact (aucune invention côté client)", () => {
+  const r = extractPhotoVerdict("Analyse simple sans tag");
+  assert.equal(r.verdict, null);
+  assert.equal(r.analysis, "Analyse simple sans tag");
 });
 
 console.log("");
