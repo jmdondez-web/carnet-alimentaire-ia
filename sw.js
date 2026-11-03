@@ -1,10 +1,10 @@
-const CACHE_NAME = "carnet-pwa-v24";
+const CACHE_NAME = "carnet-pwa-v25";
 const urlsToCache = [
   "/", "/index.html", "/settings.html", "/style.css", "/manifest.json", "/connaissances.json",
   "/js/app.js", "/js/storage.js", "/js/ui.js", "/js/voice.js", "/js/camera.js", "/js/water.js",
   "/js/medications.js", "/js/ia.js", "/js/ia-settings.js", "/js/ia-external.js", "/js/ui-settings.js",
   "/js/export.js", "/js/settings.js", "/js/navigation.js", "/js/dashboard.js", "/js/consent.js",
-  "/js/meal-modes.js", "/js/pwa.js", "/print.html", "/js/print.js", "/tendances.html", "/js/trends.js"
+  "/js/meal-modes.js", "/js/pwa.js", "/print.html", "/js/print.js", "/tendances.html", "/js/trends.js", "/about.html"
 ];
 
 self.addEventListener("install", event => {
