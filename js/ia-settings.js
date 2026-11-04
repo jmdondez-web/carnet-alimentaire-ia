@@ -4,6 +4,11 @@
 //
 // Politique fournisseur : UNIQUEMENT Mistral AI (entreprise française, hébergement européen,
 // offre gratuite sans carte bancaire, RGPD). Aucun fournisseur extra-européen.
+//
+// Modèles (état nov. 2026) : mistral-small-latest = Mistral Small 4 (mars 2026), MULTIMODAL
+// (texte + image) — un seul modèle pour tout. Anciens modèles retirés par Mistral et donc
+// refusés en 422 : pixtral-12b-latest (31/12/2025), open-mistral-nemo (31/07/2026),
+// mistral-small-2503/2506 (2510/07/2026).
 
 const STORAGE_KEY = "carnet_ia_settings";
 const CONSENT_KEY = "carnet_ia_consent";
@@ -13,9 +18,9 @@ export const PROVIDERS = {
     name: "Mistral AI (France)",
     description: "🇪🇺 Fournisseur européen (France), RGPD, offre gratuite sans carte bancaire. Vérification par SMS requise.",
     apiUrl: "https://api.mistral.ai/v1/chat/completions",
-    models: ["mistral-small-latest", "open-mistral-nemo"],
+    models: ["mistral-small-latest"],
     visionSupported: true,
-    visionModel: "pixtral-12b-latest",
+    visionModel: "mistral-small-latest",
     freeTier: true
   }
 };
@@ -29,7 +34,8 @@ const DEFAULT_SETTINGS = {
 };
 
 // Migration douce : si un ancien réglage référence un modèle ou fournisseur disparu
-// (mistral-tiny, mistral-medium, pixtral-12b-2409, groq…), on repasse aux valeurs par défaut.
+// (mistral-tiny, mistral-medium, pixtral-12b-*, open-mistral-nemo, groq…), on repasse
+// aux valeurs par défaut.
 export function getIASettings() {
   const stored = localStorage.getItem(STORAGE_KEY);
   const base = { ...DEFAULT_SETTINGS };
@@ -96,9 +102,8 @@ export function getAPIConfig() {
   const provider = PROVIDERS[settings.provider];
   return {
     url: provider.apiUrl,
-    model: settings.visionEnabled && provider.visionSupported && settings.mode === "external"
-           ? provider.visionModel
-           : settings.model,
+    // Mistral Small 4 est multimodal : le même modèle sert le texte et la vision.
+    model: provider.models.includes(settings.model) ? settings.model : DEFAULT_SETTINGS.model,
     apiKey: settings.apiKey,
     provider: settings.provider,
     visionSupported: provider.visionSupported && settings.visionEnabled
