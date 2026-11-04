@@ -53,7 +53,7 @@ def _record_usage(client_id, vision):
         entry["analyses_text"] += 1
     _save_usage(usage)
 
-app = FastAPI(title="Carnet Alimentaire API", version="0.3.0")
+app = FastAPI(title="Carnet Alimentaire API", version="0.3.1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -63,7 +63,10 @@ app.add_middleware(
 )
 
 MISTRAL_API_URL = "https://api.mistral.ai/v1/chat/completions"
-MISTRAL_MODELS = {"text": "mistral-small-latest", "vision": "pixtral-12b-latest"}
+# Mistral Small 4 (mars 2026) est MULTIMODAL : le même modèle analyse texte et images.
+# Ancien modèle vision pixtral-12b-latest retiré par Mistral le 31/12/2025 → 422 sur
+# toute analyse photo. open-mistral-nemo retiré le 31/07/2026.
+MISTRAL_MODELS = {"text": "mistral-small-latest", "vision": "mistral-small-latest"}
 
 def mistral_key():
     key = os.environ.get("MISTRAL_API_KEY", "")
@@ -78,7 +81,7 @@ def load_knowledge():
 @app.get("/api/health")
 def health():
     configured = bool(os.environ.get("MISTRAL_API_KEY", ""))
-    return {"status": "ok", "app": "carnet-alimentaire", "version": "0.3.0", "ia_proxy": configured}
+    return {"status": "ok", "app": "carnet-alimentaire", "version": "0.3.1", "ia_proxy": configured}
 
 @app.get("/api/knowledge")
 def knowledge():
