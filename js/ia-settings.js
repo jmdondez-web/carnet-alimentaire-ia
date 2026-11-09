@@ -97,6 +97,17 @@ export function hasValidAPIKey() {
   return settings.mode === "external" && (!settings.apiKey || settings.apiKey.length > 10);
 }
 
+// Chemin d'appel du mode externe : "direct" (clé personnelle, utile hors serveur)
+// ou "proxy" (clé du serveur, rien à configurer côté client).
+export function getIAEndpoint(settings) {
+  return settings.apiKey ? "direct" : "proxy";
+}
+
+// Le serveur (LXC) a-t-il sa clé Mistral configurée ? Basé sur /api/health.
+export function isProxyConfigured(health) {
+  return !!(health && health.status === "ok" && health.ia_proxy === true);
+}
+
 export function getAPIConfig() {
   const settings = getIASettings();
   const provider = PROVIDERS[settings.provider];
@@ -112,8 +123,25 @@ export function getAPIConfig() {
 
 export async function testAPIConnection() {
   const settings = getIASettings();
+
+  // Sans clé personnelle → on teste le PROXY DU SERVEUR (/api/analyse), pas
+  // l'API Mistral directe : le mode externe fonctionne sans clé personnelle
+  // dès que le serveur a la sienne. Le bouton ne doit plus répondre
+  // « Clé API manquante » dans ce cas.
   if (!settings.apiKey) {
-    return { success: false, error: "Clé API manquante" };
+    try {
+      const r = await fetch("/api/health");
+      if (!r.ok) {
+        return { success: false, error: "Serveur injoignable (HTTP " + r.status + "). Sans clé personnelle, le mode externe nécessite ton serveur." };
+      }
+      const health = await r.json();
+      if (!isProxyConfigured(health)) {
+        return { success: false, error: "Clé serveur non configurée (/api/health → ia_proxy: false)" };
+      }
+      return { success: true, message: "Proxy serveur actif (API " + health.version + ") — analyses relayées par ton serveur, aucune clé personnelle nécessaire." };
+    } catch(e) {
+      return { success: false, error: "Serveur injoignable : " + e.message + ". Hors serveur, une clé personnelle est nécessaire." };
+    }
   }
 
   const config = getAPIConfig();
