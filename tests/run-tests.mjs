@@ -96,9 +96,26 @@ test("stats : portions standard par famille (salade → fruits & légumes)", () 
   assert.equal(fl.portions, 2); // 2 repas avec fruits & légumes (salade de lentilles, soupe) ; le « salade » hors période n'est pas compté
   assert.equal(gras.portions, 2); // 2 repas avec plat gras/sucré (pizza, steak frites)
 });
-test("stats : eau moyenne sur la période (diviseur = jours de période)", () => {
+test("stats : jours d'utilisation = étendue réelle des données (pas la période)", () => {
   const s = computeStats(30, data30, NOW);
-  assert.equal(Math.round(s.avgEau), Math.round(230 / 30));
+  // Données du 20/10 au 02/11 inclus = 14 jours ; eau 230 cl au total sur ces jours
+  assert.equal(s.joursUtilisation, 14);
+  assert.equal(Math.round(s.avgEau), Math.round(230 / 14));
+  assert.equal(s.avgRepas.toFixed(1), (4 / 14).toFixed(1));
+});
+test("stats : 1 seul jour d'essai → moyennes NON diluées par la période de 30 jours", () => {
+  const data1jour = {
+    meals: [
+      { datetime: "2026-11-02T08:00", text: "pain et beurre" },
+      { datetime: "2026-11-02T12:00", text: "salade de riz" },
+      { datetime: "2026-11-02T19:00", text: "soupe de légumes" }
+    ],
+    water: { "2026-11-02": [{ cl: 150 }] }
+  };
+  const s = computeStats(30, data1jour, NOW);
+  assert.equal(s.joursUtilisation, 1);
+  assert.equal(s.avgRepas, 3);        // 3 repas ce jour-là → 3/jour, pas 0,1
+  assert.equal(s.avgEau, 150);        // 150 cl ce jour-là → 150 cl/jour, pas 5
 });
 test("critique locale : mentionne l'hypothèse portion standard", () => {
   const s = computeStats(30, data30, NOW);
@@ -121,6 +138,7 @@ test("critique locale : alerte PNNS 5 portions si fruits & légumes rares", () =
   const s = computeStats(30, dataLowFl, NOW);
   const txt = critiqueLocale(s);
   assert.ok(txt.includes("5 portions par jour"));
+  assert.ok(txt.includes("3 avec des données")); // période 30 jours, 3 jours d'utilisation
 });
 
 console.log("Reconnaissance photo (verdict) :");

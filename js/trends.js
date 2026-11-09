@@ -20,10 +20,25 @@ export function normalize(t) {
   return (t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
+// Jours réellement couverts par les données (premier → dernier enregistrement
+// de la période, inclusifs). Les moyennes divisent par CE nombre et non par la
+// période entière : 3 repas et 100 cl saisis hier ne doivent pas s'afficher
+// comme 0,1 repas/jour et 3 cl/jour sur une période de 30 jours.
+function joursUtilisation(mealDates, waterDates, days) {
+  const all = (mealDates || []).concat(waterDates || []).filter(Boolean);
+  if (all.length === 0) return 1;
+  const min = all.reduce(function(a, b) { return a < b ? a : b; });
+  const max = all.reduce(function(a, b) { return a > b ? a : b; });
+  let j = Math.round((new Date(max).getTime() - new Date(min).getTime()) / 86400000) + 1;
+  if (j < 1) j = 1;
+  if (days && j > days) j = days;
+  return j;
+}
+
 export function computeStats(days, data, now) {
   const meals = (data && data.meals) || [];
   const waterRaw = (data && data.water) || {};
-  // `now` injectable pour les tests (déterminisme) ; Date.now() en production.
+  // \`now\` injectable pour les tests (déterminisme) ; Date.now() en production.
   const ref = now || Date.now();
   const limit = days ? ref - days * 86400000 : 0;
   const filtered = meals.filter(function(m) {
@@ -42,7 +57,7 @@ export function computeStats(days, data, now) {
   });
 
   let waterSum = 0;
-  let firstDate = null;
+  const waterDates = [];
   for (const entry of Object.entries(waterRaw)) {
     const total = Array.isArray(entry[1])
       ? entry[1].reduce(function(s, e) { return s + (e.cl || 0); }, 0)
@@ -52,13 +67,16 @@ export function computeStats(days, data, now) {
       if (entry[0] < lim) continue;
     }
     waterSum += total;
-    if (!firstDate || entry[0] < firstDate) firstDate = entry[0];
+    waterDates.push(entry[0]);
   }
+
+  // Étendue réelle des données : repas + eau de la période.
+  const mealDates = filtered.map(function(m) { return (m.datetime || "").slice(0, 10); });
+  const nbJours = joursUtilisation(mealDates, waterDates, days);
 
   let span = days;
   if (!span) {
-    const dates = filtered.map(function(m) { return m.datetime.slice(0, 10); });
-    if (firstDate) dates.push(firstDate);
+    const dates = mealDates.concat(waterDates);
     if (dates.length) {
       const min = Math.min.apply(null, dates.map(function(d) { return new Date(d).getTime(); }));
       span = Math.max(1, Math.ceil((ref - min) / 86400000));
@@ -66,24 +84,25 @@ export function computeStats(days, data, now) {
   }
 
   return {
-    days: days || span,
+    days: days || span,              // période analysée (étiquette)
+    joursUtilisation: nbJours,        // jours avec des données dans la période
     meals: filtered,
     famCounts: famCounts,
-    avgRepas: filtered.length / span,
-    avgEau: waterSum / span,
+    avgRepas: filtered.length / nbJours,
+    avgEau: waterSum / nbJours,
     alertes: filtered.filter(function(m) { return !!m.interactionDetected; }).length
   };
 }
 
 export function critiqueLocale(stats) {
   const L = [];
-  L.push("Points observés sur la période (" + stats.days + " jours) :");
+  L.push("Points observés sur la période (" + stats.days + " jours, dont " + stats.joursUtilisation + " avec des données) :");
   L.push("Hypothèse : sans grammage, chaque aliment vaut une portion individuelle standard.");
   const nb = stats.meals.length;
   if (nb === 0) {
     L.push("- Aucun repas enregistré sur la période : impossible de dégager une tendance.");
   } else {
-    L.push("- " + nb + " repas enregistrés (" + stats.avgRepas.toFixed(1) + "/jour en moyenne).");
+    L.push("- " + nb + " repas enregistrés, soit " + stats.avgRepas.toFixed(1) + "/jour sur tes " + stats.joursUtilisation + " jour(s) d'utilisation.");
     const fl = stats.famCounts.filter(function(f) { return f.nom === "Fruits & légumes"; })[0];
     if (nb >= 5 && fl && fl.portions / nb < 0.5) {
       L.push("- Fruits & légumes présents dans moins d'un repas sur deux : le repère PNNS est de 5 portions par jour.");
@@ -93,7 +112,7 @@ export function critiqueLocale(stats) {
       L.push("- Aliments gras ou sucrés fréquents (plus de 4 repas sur 10) : le PNNS recommande d'en limiter la fréquence.");
     }
     if (stats.avgEau > 0 && stats.avgEau < 100) {
-      L.push("- Hydratation moyenne de " + Math.round(stats.avgEau) + " cl/jour, en dessous du repère (~150 cl/jour).");
+      L.push("- Hydratation moyenne de " + Math.round(stats.avgEau) + " cl/jour sur tes jours d'utilisation, en dessous du repère (~150 cl/jour).");
     } else if (stats.avgEau >= 150) {
       L.push("- Hydratation moyenne conforme au repère (~150 cl/jour).");
     }
@@ -111,9 +130,9 @@ export function buildExternalPrompt(stats) {
   const mealsText = stats.meals.slice(0, 80).map(function(m) {
     return "- " + m.text;
   }).join("\n");
-  return "Période analysée : " + stats.days + " jours\n" +
-    "Repas enregistrés : " + stats.meals.length + " (" + stats.avgRepas.toFixed(1) + "/jour)\n" +
-    "Eau moyenne : " + Math.round(stats.avgEau) + " cl/jour (repère ~150 cl)\n" +
+  return "Période analysée : " + stats.days + " jours (jours avec données : " + stats.joursUtilisation + ")\n" +
+    "Repas enregistrés : " + stats.meals.length + " (" + stats.avgRepas.toFixed(1) + "/jour d'utilisation)\n" +
+    "Eau moyenne : " + Math.round(stats.avgEau) + " cl/jour d'utilisation (repère ~150 cl)\n" +
     "Alertes d'interactions relevées : " + stats.alertes + "\n" +
     "HYPOTHÈSE : en l'absence de grammage indiqué, considère chaque aliment comme une portion individuelle standard.\n" +
     "Familles d'aliments détectées :\n" + famText + "\n\n" +
@@ -134,13 +153,14 @@ function renderStats(stats) {
   if (!el) return;
   const cards = [
     { label: "Repas enregistrés", value: String(stats.meals.length) },
-    { label: "Moyenne repas/jour", value: stats.avgRepas.toFixed(1) },
-    { label: "Eau moyenne (cl/jour)", value: String(Math.round(stats.avgEau)) },
+    { label: "Repas/jour (moy. utilisation)", value: stats.avgRepas.toFixed(1) },
+    { label: "Eau/jour en cl (moy. utilisation)", value: String(Math.round(stats.avgEau)) },
     { label: "Alertes relevées", value: String(stats.alertes) }
   ];
   el.innerHTML = cards.map(function(c) {
     return "<div class='stat-card'><div class='stat-value'>" + c.value + "</div><div class='stat-label'>" + escapeHtml(c.label) + "</div></div>";
-  }).join("");
+  }).join("") +
+  "<p class='fam-note'>Moyennes calculées sur tes " + stats.joursUtilisation + " jour(s) avec des données, pas sur les " + stats.days + " jours de la période — les jours sans enregistrement ne sont pas comptés.</p>";
 
   const famEl = document.getElementById("trendsFamilies");
   if (famEl) {
