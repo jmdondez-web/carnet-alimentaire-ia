@@ -38,7 +38,7 @@ function joursUtilisation(mealDates, waterDates, days) {
 export function computeStats(days, data, now) {
   const meals = (data && data.meals) || [];
   const waterRaw = (data && data.water) || {};
-  // \`now\` injectable pour les tests (déterminisme) ; Date.now() en production.
+  // Paramètre now injectable pour les tests (déterminisme) ; Date.now() en production.
   const ref = now || Date.now();
   const limit = days ? ref - days * 86400000 : 0;
   const filtered = meals.filter(function(m) {
