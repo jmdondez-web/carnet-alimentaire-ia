@@ -6,6 +6,7 @@ import { classifyFinal } from "../js/voice.js";
 import { filterMealsByDays, waterRowsByDays } from "../js/print.js";
 import { computeStats, critiqueLocale, FAMILLES } from "../js/trends.js";
 import { extractPhotoVerdict } from "../js/ia-external.js";
+import { getIAEndpoint, isProxyConfigured } from "../js/ia-settings.js";
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -139,6 +140,23 @@ test("critique locale : alerte PNNS 5 portions si fruits & légumes rares", () =
   const txt = critiqueLocale(s);
   assert.ok(txt.includes("5 portions par jour"));
   assert.ok(txt.includes("3 avec des données")); // période 30 jours, 3 jours d'utilisation
+});
+
+console.log("Paramètres IA (endpoint) :");
+test("clé personnelle présente → appel direct Mistral", () => {
+  assert.equal(getIAEndpoint({ apiKey: "mstrl_abcdef123456" }), "direct");
+});
+test("sans clé personnelle → proxy serveur", () => {
+  assert.equal(getIAEndpoint({ apiKey: "" }), "proxy");
+});
+test("health du serveur configuré → proxy actif", () => {
+  assert.equal(isProxyConfigured({ status: "ok", app: "carnet-alimentaire", version: "0.3.1", ia_proxy: true }), true);
+});
+test("health sans clé serveur (ia_proxy false) → proxy inactif", () => {
+  assert.equal(isProxyConfigured({ status: "ok", app: "carnet-alimentaire", version: "0.3.1", ia_proxy: false }), false);
+});
+test("serveur injoignable (health null, usage hors LXC) → proxy inactif", () => {
+  assert.equal(isProxyConfigured(null), false);
 });
 
 console.log("Reconnaissance photo (verdict) :");

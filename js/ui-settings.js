@@ -8,7 +8,8 @@ import {
   PROVIDERS,
   testAPIConnection,
   hasValidAPIKey,
-  hasUserConsented
+  hasUserConsented,
+  isProxyConfigured
 } from './ia-settings.js';
 import { showConsentModal } from './consent.js';
 
@@ -61,7 +62,7 @@ export function renderIASettingsPanel(containerId) {
         </div>
 
         <div class="setting-group">
-          <label>Clé API :</label>
+          <label id="apiKeyLabel">Clé API :</label>
           <input type="password" id="apiKeyInput" class="settings-input"
                  placeholder="Entrez votre clé API ${PROVIDERS[settings.provider].name}"
                  value="${settings.apiKey || ''}">
@@ -76,7 +77,7 @@ export function renderIASettingsPanel(containerId) {
           </label>
         </div>
 
-        <div class="info-box">
+        <div class="info-box" id="getKeyInfo">
           💡 <strong>Obtention d'une clé API gratuite :</strong><br>
           ${settings.provider === 'mistral' ?
             '➡️ https://console.mistral.ai → Créer un compte → API Keys → Créer une clé' :
@@ -97,6 +98,32 @@ export function renderIASettingsPanel(containerId) {
   `;
 
   bindSettingsEvents(containerId);
+  updateProxyStatus(containerId);
+}
+
+// Si le serveur (LXC) a sa clé Mistral configurée, l'utilisateur n'a AUCUNE clé
+// à entrer : le mode externe passe par le proxy /api/analyse avec la clé serveur.
+// On adapte l'écran en conséquence. Hors serveur (PWA servie ailleurs, réponse
+// absente ou clé serveur absente), l'écran reste inchangé.
+async function updateProxyStatus(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  try {
+    const r = await fetch("/api/health");
+    if (!r.ok) return;
+    const health = await r.json();
+    if (!isProxyConfigured(health)) return;
+    const info = container.querySelector("#getKeyInfo");
+    if (info) {
+      info.innerHTML = "🔑 <strong>Clé configurée sur le serveur (proxy actif) :</strong><br>Aucune clé à entrer ici — les analyses passent par ton serveur. Le champ ci-dessous est optionnel : il ne sert que pour un usage hors serveur.";
+    }
+    const label = container.querySelector("#apiKeyLabel");
+    if (label) label.textContent = "Clé API (optionnelle) :";
+    const input = container.querySelector("#apiKeyInput");
+    if (input) input.placeholder = "Vide = analyse via le serveur";
+  } catch(e) {
+    // Serveur injoignable : écran inchangé (instructions d'obtention de clé).
+  }
 }
 
 function bindSettingsEvents(containerId) {
@@ -128,7 +155,7 @@ function bindSettingsEvents(containerId) {
       const apiInput = container.querySelector('#apiKeyInput');
       if (apiInput) apiInput.placeholder = `Entrez votre clé API ${PROVIDERS[provider].name}`;
 
-      const infoBox = container.querySelector('.info-box:not(.consent-info)');
+      const infoBox = container.querySelector('#getKeyInfo');
       if (infoBox) {
         infoBox.innerHTML = `💡 <strong>Obtention d'une clé API gratuite :</strong><br>
           ${provider === 'mistral' ?
