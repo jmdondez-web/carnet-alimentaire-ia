@@ -34,6 +34,32 @@ export function clearRepasDraft() {
   localStorage.removeItem(KEYS.REPAS_DRAFT);
 }
 
+// === AIDES PURES (testées : tests/run-tests.mjs) ===
+// Tri d'affichage de l'historique : chronologie inverse (récent d'abord),
+// indépendamment de l'ordre de saisie — un repas encodé tardivement avec
+// l'heure du matin doit s'afficher à sa vraie place. Les repas sans date
+// valide partent en fin de liste. Aucune mutation de la liste d'origine.
+export function sortMealsByDatetimeDesc(repas) {
+  return [...(repas || [])].sort(function(a, b) {
+    const ta = new Date(a.datetime).getTime();
+    const tb = new Date(b.datetime).getTime();
+    if (isNaN(ta) && isNaN(tb)) return 0;
+    if (isNaN(ta)) return 1;
+    if (isNaN(tb)) return -1;
+    return tb - ta;
+  });
+}
+
+// Remplace le repas portant cet id, position conservée (le tri se fait à
+// l'affichage). Fusionne les champs du repas mis à jour sur l'existant.
+// Id introuvable → liste inchangée (copie). Aucune mutation.
+export function updateMealInList(repas, updatedMeal) {
+  if (!updatedMeal || updatedMeal.id == null) return [...(repas || [])];
+  return (repas || []).map(function(m) {
+    return m.id === updatedMeal.id ? { ...m, ...updatedMeal } : m;
+  });
+}
+
 // === MÉDICAMENTS ===
 export function loadMeds() {
   const stored = localStorage.getItem(KEYS.MEDS);

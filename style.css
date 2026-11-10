@@ -197,3 +197,29 @@ body.dark .dash-details > div { border-color:rgba(255,255,255,.05); }
 .photo-mode-note { font-size:var(--fs-xs); color:var(--amber); margin:var(--sp-1) 0 0; }
 .photo-notice { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); width:min(92%, 420px); background:var(--card); color:var(--text); border-radius:var(--radius-sm); box-shadow:0 4px 16px rgba(0,40,0,.25); padding:var(--sp-2); font-size:var(--fs-sm); z-index:9998; display:none; gap:var(--sp-1); align-items:flex-start; }
 .photo-notice button { border:0; background:transparent; cursor:pointer; font-size:var(--fs-md); padding:0 4px; }
+
+/* Pré-analyse photo (avant enregistrement) */
+.pre-analysis {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--green);
+  background: var(--green-soft);
+  border-radius: 8px;
+  font-size: var(--fs-sm);
+}
+.pre-analysis-head { font-weight: 600; margin-bottom: 4px; }
+.pre-analysis-text { white-space: pre-wrap; }
+
+/* Édition d'un repas dans l'historique */
+.meal-actions { margin-top: 6px; }
+.meal-edit-btn {
+  border: 0;
+  background: var(--green-soft);
+  color: var(--green);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  padding: 4px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+}
