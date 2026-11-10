@@ -7,6 +7,7 @@ import { filterMealsByDays, waterRowsByDays } from "../js/print.js";
 import { computeStats, critiqueLocale, FAMILLES } from "../js/trends.js";
 import { extractPhotoVerdict } from "../js/ia-external.js";
 import { getIAEndpoint, isProxyConfigured } from "../js/ia-settings.js";
+import { sortMealsByDatetimeDesc, updateMealInList } from "../js/storage.js";
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -157,6 +158,46 @@ test("health sans clé serveur (ia_proxy false) → proxy inactif", () => {
 });
 test("serveur injoignable (health null, usage hors LXC) → proxy inactif", () => {
   assert.equal(isProxyConfigured(null), false);
+});
+
+console.log("Historique : tri et édition :");
+test("tri chronologique inverse — un repas encodé tardivement remonte à sa vraie place", () => {
+  const list = [
+    { id: 3, text: "dîner", datetime: "2026-11-09T19:00" },
+    { id: 1, text: "petit-déj", datetime: "2026-11-09T07:00" },
+    { id: 2, text: "midi", datetime: "2026-11-09T12:00" }
+  ];
+  const sorted = sortMealsByDatetimeDesc(list);
+  assert.deepEqual(sorted.map(m => m.id), [3, 2, 1]);
+  // pas de mutation de la liste d'origine
+  assert.equal(list[1].id, 1);
+});
+test("repas sans date valide → en fin de liste, sans crash", () => {
+  const list = [
+    { id: 1, text: "sans date", datetime: "" },
+    { id: 2, text: "daté", datetime: "2026-11-09T12:00" }
+  ];
+  const sorted = sortMealsByDatetimeDesc(list);
+  assert.deepEqual(sorted.map(m => m.id), [2, 1]);
+});
+test("updateMealInList remplace par id, conserve les autres et la position", () => {
+  const list = [
+    { id: 1, text: "ancien", datetime: "2026-11-09T07:00" },
+    { id: 2, text: "milieu", datetime: "2026-11-09T12:00" },
+    { id: 3, text: "fin", datetime: "2026-11-09T19:00" }
+  ];
+  const out = updateMealInList(list, { id: 2, text: "corrigé", datetime: "2026-11-09T12:30" });
+  assert.equal(out.length, 3);
+  assert.equal(out[1].text, "corrigé");
+  assert.equal(out[1].datetime, "2026-11-09T12:30");
+  assert.equal(list[1].text, "milieu"); // pas de mutation de la liste d'origine
+});
+test("updateMealInList : id inconnu → liste inchangée (copie)", () => {
+  const list = [{ id: 1, text: "a" }];
+  const out = updateMealInList(list, { id: 99, text: "x" });
+  assert.equal(out.length, 1);
+  assert.equal(out[0].text, "a");
+  assert.notEqual(out, list);
 });
 
 console.log("Reconnaissance photo (verdict) :");
