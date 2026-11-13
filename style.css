@@ -223,3 +223,41 @@ body.dark .dash-details > div { border-color:rgba(255,255,255,.05); }
   cursor: pointer;
   font-family: inherit;
 }
+
+/* ========== CONSENTEMENT IA — FENÊTRE VOLANTE (RGPD Art. 9) ========== */
+/* L'overlay fige et assombrit la page : le choix est délibéré, pas un clic perdu. */
+.consent-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 20, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-2);
+  z-index: 9999;
+}
+.consent-modal {
+  background: var(--card);
+  color: var(--text);
+  width: min(94%, 440px);
+  max-height: 86vh;
+  overflow-y: auto;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 30px rgba(0, 40, 0, 0.35);
+  padding: 18px 20px;
+}
+.consent-modal h3 { margin: 0 0 8px; font-size: 1.05rem; }
+.consent-intro { font-size: var(--fs-sm); margin: 0 0 10px; }
+.consent-list { margin: 0 0 12px; padding-left: 20px; font-size: var(--fs-sm); }
+.consent-list li { margin-bottom: 6px; }
+.consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  margin: 0 0 12px;
+  cursor: pointer;
+}
+.consent-check input { margin-top: 2px; }
+.consent-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.consent-hint { min-height: 1.2em; font-size: var(--fs-sm); color: var(--amber); margin: 8px 0 0; }
