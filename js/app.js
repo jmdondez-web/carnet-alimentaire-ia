@@ -23,6 +23,29 @@ function refreshHome() {
   UI.updateTip(IA.getRandomTip(), 'pnnsTip');
 }
 
+// Version déployée — version.txt (date + commit, généré par update.sh) prioritaire,
+// manifest.json en repli. Distingue plusieurs déploiements le même jour.
+// Réessayable : un échec initial (téléphone hors ligne au lancement) ne doit plus
+// laisser le badge vide en permanence — on retente sur retour de connectivité
+// et à chaque retour de l'appli au premier plan.
+async function refreshVersionBadge() {
+  const el = document.getElementById("appVersion");
+  if (!el) return;
+  let label = "";
+  try {
+    const r = await fetch("version.txt", { cache: "no-store" });
+    if (r.ok) label = (await r.text()).trim();
+  } catch (e) {}
+  if (!label) {
+    try {
+      const manifest = await fetch("manifest.json", { cache: "no-store" }).then(r => r.json());
+      if (manifest.version) label = "v" + manifest.version;
+    } catch (e) {}
+  }
+  // Honnêteté : un échec réseau s'affiche comme tel au lieu d'un badge vide muet.
+  el.textContent = label || "⚠️ hors ligne";
+}
+
 async function init() {
   // Charger les données
   repasList = Storage.loadRepas();
@@ -114,23 +137,12 @@ async function init() {
     if (status) status.innerText = "Dictée non supportée par ce navigateur (essaie Chrome)";
   }
 
-  // Version déployée — version.txt (date + commit, généré par update.sh) prioritaire,
-  // manifest.json en repli. Distingue plusieurs déploiements le même jour.
-  try {
-    const el = document.getElementById("appVersion");
-    if (el) {
-      let label = "";
-      try {
-        const r = await fetch("version.txt", { cache: "no-store" });
-        if (r.ok) label = (await r.text()).trim();
-      } catch (e) {}
-      if (!label) {
-        const manifest = await fetch("manifest.json").then(r => r.json());
-        if (manifest.version) label = "v" + manifest.version;
-      }
-      el.textContent = label;
-    }
-  } catch (e) { /* hors ligne ou indisponible : badge vide */ }
+  // Badge de version : tentative immédiate + re-tentative au retour du réseau / du premier plan
+  refreshVersionBadge();
+  window.addEventListener("online", refreshVersionBadge);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshVersionBadge();
+  });
 
   bindEvents();
   Navigation.initNavigation();

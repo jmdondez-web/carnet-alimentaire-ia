@@ -1,4 +1,4 @@
-const CACHE_NAME = "carnet-pwa-v30";
+const CACHE_NAME = "carnet-pwa-v31";
 const urlsToCache = [
   "/", "/index.html", "/settings.html", "/style.css", "/manifest.json", "/connaissances.json",
   "/js/app.js", "/js/storage.js", "/js/ui.js", "/js/voice.js", "/js/camera.js", "/js/water.js",
@@ -7,13 +7,71 @@ const urlsToCache = [
   "/js/meal-modes.js", "/js/pwa.js", "/print.html", "/js/print.js", "/tendances.html", "/js/trends.js", "/about.html"
 ];
 
+// Ressources dynamiques : le réseau prime TOUJOURS, le cache n'est qu'un secours hors ligne.
+// version.txt : l'option cache:"no-store" côté page est ignorée quand le SW intercepte,
+// c'est donc ici que le badge de version devient fiable.
+const NETWORK_FIRST = ["/api/", "/version.txt", "/manifest.json"];
+
+function isNetworkFirst(request) {
+  const url = new URL(request.url);
+  // Navigations (pages HTML) : réseau d'abord pour servir la dernière version déployée
+  if (request.mode === "navigate") return true;
+  return NETWORK_FIRST.some(p => url.pathname === p || url.pathname.startsWith(p));
+}
+
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
   self.skipWaiting();
 });
 
+self.addEventListener("activate", event => {
+  // Purge des anciens caches : sans cela, une version antérieure du SW peut continuer
+  // à servir des fichiers périmés depuis un cache obsolète.
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
 self.addEventListener("fetch", event => {
+  const request = event.request;
+
+  // Requêtes non-GET (API POST, uploads) et origines externes : jamais de cache.
+  if (request.method !== "GET") return;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  // 1. Dynamique et navigations : réseau d'abord, cache en secours uniquement.
+  if (isNetworkFirst(request)) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          return response;
+        })
+        .catch(() =>
+          caches.match(request).then(cached => cached || (request.mode === "navigate" ? caches.match("/index.html") : Response.error()))
+        )
+    );
+    return;
+  }
+
+  // 2. Assets statiques : cache d'abord (chargement instantané), revalidation en arrière-plan
+  //    pour que la prochaine ouverture serve la dernière version (stale-while-revalidate).
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.match(request).then(cached => {
+      const update = fetch(request)
+        .then(response => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => null);
+      return cached || update.then(response => response || Response.error());
+    })
   );
 });
