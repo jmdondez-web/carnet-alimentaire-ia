@@ -60,6 +60,11 @@ export function updateMealInList(repas, updatedMeal) {
   });
 }
 
+// Suppression d'un repas de la liste (ne touche ni l'eau ni les listes de santé)
+export function removeMealFromList(repas, id) {
+  return (repas || []).filter(m => m.id !== id);
+}
+
 // === MÉDICAMENTS ===
 export function loadMeds() {
   const stored = localStorage.getItem(KEYS.MEDS);

@@ -10,7 +10,7 @@ import { filterMealsByDays, waterRowsByDays } from "../js/print.js";
 import { computeStats, critiqueLocale, FAMILLES } from "../js/trends.js";
 import { extractPhotoVerdict } from "../js/ia-external.js";
 import { getIAEndpoint, isProxyConfigured } from "../js/ia-settings.js";
-import { sortMealsByDatetimeDesc, updateMealInList } from "../js/storage.js";
+import { sortMealsByDatetimeDesc, updateMealInList, removeMealFromList } from "../js/storage.js";
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -240,6 +240,23 @@ test("collision interface native : Storage.* exige « import * as Storage »", (
       );
     }
   }
+});
+
+// Non-régression : la suppression d'un repas ne retire QUE ce repas,
+// tolère les listes vides/nulles et préserve l'ordre des autres.
+test("removeMealFromList : retire le repas ciblé, rien d'autre", () => {
+  const list = [
+    { id: 1, text: "petit-déj" },
+    { id: 2, text: "salade" },
+    { id: 3, text: "dîner" }
+  ];
+  assert.deepEqual(removeMealFromList(list, 2), [
+    { id: 1, text: "petit-déj" },
+    { id: 3, text: "dîner" }
+  ]);
+  assert.deepEqual(removeMealFromList(list, 99), list, "id introuvable → liste intacte");
+  assert.deepEqual(removeMealFromList([], 1), []);
+  assert.deepEqual(removeMealFromList(null, 1), []);
 });
 
 console.log("");

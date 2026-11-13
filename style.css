@@ -273,3 +273,14 @@ body.dark .dash-details > div { border-color:rgba(255,255,255,.05); }
   white-space: pre-wrap;
 }
 .meal-analysis-head { display: block; font-weight: 600; margin-bottom: 3px; }
+
+/* Suppression d'un repas (🗑️ à côté de ✏️) */
+.meal-delete-btn {
+  border: 0;
+  background: transparent;
+  font-size: var(--fs-sm);
+  padding: 4px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.meal-delete-btn:hover { background: rgba(180, 83, 9, 0.12); }

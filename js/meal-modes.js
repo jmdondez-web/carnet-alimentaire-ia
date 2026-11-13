@@ -161,7 +161,7 @@ function saveMode(mode) {
   localStorage.setItem('carnet_meal_mode', mode);
 }
 
-function setMode(mode) {
+export function setMode(mode) {
   currentMode = mode;
   document.querySelectorAll('.mode-switch button').forEach(b =>
     b.classList.toggle('on', b.dataset.mode === mode)

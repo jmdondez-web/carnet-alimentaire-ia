@@ -13,6 +13,11 @@ export function setMealEditHandler(fn) {
   mealEditHandler = fn;
 }
 
+let mealDeleteHandler = null;
+export function setMealDeleteHandler(fn) {
+  mealDeleteHandler = fn;
+}
+
 export function renderMeals(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -34,6 +39,7 @@ export function renderMeals(containerId) {
       ${meal.photo ? `<img src="${meal.photo}" class="meal-photo" alt="photo">` : ""}
       <div class="meal-actions">
         <button class="meal-edit-btn" data-id="${meal.id}">✏️ Modifier</button>
+        <button class="meal-delete-btn" data-id="${meal.id}" title="Supprimer ce repas">🗑️</button>
       </div>
     </li>
   `).join("");
@@ -41,6 +47,11 @@ export function renderMeals(containerId) {
   container.querySelectorAll(".meal-edit-btn").forEach(btn => {
     btn.onclick = () => {
       if (mealEditHandler) mealEditHandler(Number(btn.dataset.id));
+    };
+  });
+  container.querySelectorAll(".meal-delete-btn").forEach(btn => {
+    btn.onclick = () => {
+      if (mealDeleteHandler) mealDeleteHandler(Number(btn.dataset.id));
     };
   });
 }

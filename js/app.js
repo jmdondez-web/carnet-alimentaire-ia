@@ -346,6 +346,9 @@ function startEditMeal(id) {
   const meal = repasList.find(m => m.id === id);
   if (!meal) return;
   editingMealId = id;
+  // Déplier le formulaire « à table » : masqué en mode « sur le pouce », il se
+  // remplissait hors écran et l'édition semblait ne rien faire.
+  MealModes.setMode('lent');
   document.getElementById("mealText").value = meal.text === "(photo)" ? "" : (meal.text || "");
   document.getElementById("mealDatetime").value = meal.datetime || "";
   if (meal.photo) {
@@ -362,6 +365,22 @@ function startEditMeal(id) {
   if (cancel) cancel.style.display = "block";
   document.getElementById("mealText").scrollIntoView({ behavior: "smooth", block: "center" });
   UI.showToast("Modification du repas — corrige puis mets à jour");
+}
+
+// Suppression d'un repas de l'historique (bouton 🗑️ à côté de ✏️)
+function deleteMeal(id) {
+  const meal = repasList.find(m => m.id === id);
+  if (!meal) return;
+  const label = meal.text === "(photo)" ? "ce repas" : "« " + (meal.text || "").slice(0, 40) + ((meal.text || "").length > 40 ? "…" : "") + " »";
+  if (!window.confirm("Supprimer " + label + " ?")) return;
+  const newList = Storage.removeMealFromList(repasList, id);
+  Storage.saveRepas(newList);
+  repasList = newList;
+  if (editingMealId === id) resetEditUI();
+  UI.setRepasList(newList);
+  UI.renderMeals('mealsList');
+  Dashboard.renderDashboard('pnnsDashboard', newList);
+  UI.showToast("Repas supprimé ✓");
 }
 
 function cancelEdit() {
@@ -433,6 +452,7 @@ function bindEvents() {
   document.getElementById("saveMealBtn").onclick = saveCurrentMeal;
   // Édition d'un repas de l'historique (bouton ✏️)
   UI.setMealEditHandler(startEditMeal);
+  UI.setMealDeleteHandler(deleteMeal);
   document.getElementById("cancelEditBtn").onclick = cancelEdit;
 
   // Export
