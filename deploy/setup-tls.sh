@@ -51,6 +51,10 @@ server {
     index index.html;
     location / {
         try_files $uri $uri/ =404;
+        # Sans directive de cache, le navigateur applique son heuristique et peut
+        # resservir des JS périmés pendant des jours → mélanges de versions.
+        # no-cache : conservation autorisée mais revalidation systématique.
+        add_header Cache-Control "no-cache";
     }
 
     # API
@@ -60,6 +64,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
+        add_header Cache-Control "no-store";
     }
 }
 EOF

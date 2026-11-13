@@ -1,4 +1,4 @@
-const CACHE_NAME = "carnet-pwa-v31";
+const CACHE_NAME = "carnet-pwa-v32";
 const urlsToCache = [
   "/", "/index.html", "/settings.html", "/style.css", "/manifest.json", "/connaissances.json",
   "/js/app.js", "/js/storage.js", "/js/ui.js", "/js/voice.js", "/js/camera.js", "/js/water.js",
@@ -20,7 +20,19 @@ function isNetworkFirst(request) {
 }
 
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
+  // {cache:'reload'} : le precache contourne le cache HTTP du navigateur.
+  // Sans cela, l'heuristique du navigateur peut livrer des fichiers périmés
+  // au moment du precache → versions mélangées en cache.
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.all(urlsToCache.map(url =>
+        fetch(url, { cache: "reload" }).then(r => {
+          if (!r.ok) throw new Error("precache " + url + " : " + r.status);
+          return cache.put(url, r);
+        })
+      ))
+    )
+  );
   self.skipWaiting();
 });
 
@@ -43,9 +55,10 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return;
 
   // 1. Dynamique et navigations : réseau d'abord, cache en secours uniquement.
+  //    {cache:'reload'} : jamais servi depuis le cache HTTP du navigateur.
   if (isNetworkFirst(request)) {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: "reload" })
         .then(response => {
           const copy = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
@@ -62,7 +75,7 @@ self.addEventListener("fetch", event => {
   //    pour que la prochaine ouverture serve la dernière version (stale-while-revalidate).
   event.respondWith(
     caches.match(request).then(cached => {
-      const update = fetch(request)
+      const update = fetch(request, { cache: "reload" })
         .then(response => {
           if (response && response.status === 200) {
             const copy = response.clone();
