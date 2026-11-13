@@ -261,3 +261,15 @@ body.dark .dash-details > div { border-color:rgba(255,255,255,.05); }
 .consent-check input { margin-top: 2px; }
 .consent-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .consent-hint { min-height: 1.2em; font-size: var(--fs-sm); color: var(--amber); margin: 8px 0 0; }
+
+/* Analyse du repas dans l'historique — le résultat va jusqu'au bout */
+.meal-analysis {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--green);
+  background: var(--green-soft);
+  border-radius: 8px;
+  font-size: var(--fs-sm);
+  white-space: pre-wrap;
+}
+.meal-analysis-head { display: block; font-weight: 600; margin-bottom: 3px; }

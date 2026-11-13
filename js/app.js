@@ -178,6 +178,7 @@ async function saveCurrentMeal() {
         (updated.photo && updated.photo !== old.photo);
       if (contentChanged) {
         delete updated.interactionDetected;
+        delete updated.analysis; // jamais d'analyse obsolète affichée
         updated.iaSource = 'local';
       }
       const newList = Storage.updateMealInList(list, updated);
@@ -284,9 +285,13 @@ async function analyseInBackground(meal) {
     if (iaResult.success && meal.photo && iaResult.photoVerdict && iaResult.photoVerdict !== "ok") {
       showPhotoNotice(iaResult.photoVerdict);
     }
-    if (iaResult.success && iaResult.interaction) {
-      meal.interactionDetected = iaResult.interaction;
+    // Le résultat va jusqu'au bout : stocké sur le repas, visible dans l'historique.
+    // (Avant : seul un résultat avec interaction était conservé — les analyses sans
+    // interaction, la majorité, s'exécutaient puis étaient jetées, sans trace.)
+    if (iaResult.success && iaResult.analysis) {
+      meal.analysis = iaResult.analysis;
       meal.iaSource = iaResult.source;
+      if (iaResult.interaction) meal.interactionDetected = iaResult.interaction;
       const list = Storage.loadRepas();
       const idx = list.findIndex(m => m.id === meal.id);
       if (idx !== -1) {
@@ -295,7 +300,7 @@ async function analyseInBackground(meal) {
       }
       UI.setRepasList(list);
       UI.renderMeals('mealsList');
-      UI.showAlert(iaResult.analysis, 'alertBanner');
+      if (iaResult.interaction) UI.showAlert(iaResult.analysis, 'alertBanner');
     }
   } catch(e) {
     console.error("Analyse arrière-plan:", e);

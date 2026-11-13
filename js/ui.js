@@ -30,6 +30,7 @@ export function renderMeals(containerId) {
       <div class="meal-date">${new Date(meal.datetime).toLocaleString()}</div>
       <div class="meal-text">${escapeHtml(meal.text || "")}</div>
       ${meal.interactionDetected ? `<div class="alert-mini">⚠️ ${escapeHtml(meal.interactionDetected.message)}</div>` : ""}
+      ${meal.analysis ? `<div class="meal-analysis"><span class="meal-analysis-head">🤖 Analyse — ${meal.iaSource === "external" ? "IA externe" : "règles locales"}</span>${escapeHtml(meal.analysis)}</div>` : ""}
       ${meal.photo ? `<img src="${meal.photo}" class="meal-photo" alt="photo">` : ""}
       <div class="meal-actions">
         <button class="meal-edit-btn" data-id="${meal.id}">✏️ Modifier</button>
