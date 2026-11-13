@@ -24,7 +24,7 @@ export function renderMeals(containerId) {
 
   // Ordre chronologique inverse (repas récent en premier), quelle que soit
   // l'ordre de saisie — un repas encodé en retard apparaît à sa vraie place.
-  const sorted = Storage.sortMealsByDatetimeDesc(repasList);
+  const sorted = sortMealsByDatetimeDesc(repasList);
   container.innerHTML = sorted.map(meal => `
     <li>
       <div class="meal-date">${new Date(meal.datetime).toLocaleString()}</div>

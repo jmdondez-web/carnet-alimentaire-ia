@@ -2,6 +2,9 @@
 // Les fonctions testées sont pures : elles ne touchent ni localStorage ni le DOM.
 // Garde DOM dans les modules : importables depuis Node.
 import assert from "node:assert/strict";
+import { readFileSync, readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { classifyFinal } from "../js/voice.js";
 import { filterMealsByDays, waterRowsByDays } from "../js/print.js";
 import { computeStats, critiqueLocale, FAMILLES } from "../js/trends.js";
@@ -219,6 +222,24 @@ test("absence de tag → verdict null, texte intact (aucune invention côté cli
   const r = extractPhotoVerdict("Analyse simple sans tag");
   assert.equal(r.verdict, null);
   assert.equal(r.analysis, "Analyse simple sans tag");
+});
+
+// Non-régression (13/11) : ui.js appelait Storage.sortMealsByDatetimeDesc alors
+// que « Storage » est une interface native du navigateur (localStorage) — TypeError
+// au premier rendu d'une liste NON vide (liste vide = retour anticipé, donc badge OK
+// à l'init puis crash au premier enregistrement). Un module qui utilise Storage.*
+// doit importer le namespace ; sinon l'identifiant résout vers l'interface native.
+test("collision interface native : Storage.* exige « import * as Storage »", () => {
+  const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "js");
+  for (const f of readdirSync(dir).filter(f => f.endsWith(".js"))) {
+    const src = readFileSync(join(dir, f), "utf8");
+    if (/\bStorage\.[a-zA-Z]/.test(src)) {
+      assert.ok(
+        src.includes("import * as Storage"),
+        f + " : Storage.* utilisé sans « import * as Storage » — l'identifiant résout vers l'interface native du navigateur (bug du 13/11)"
+      );
+    }
+  }
 });
 
 console.log("");
