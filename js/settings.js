@@ -219,14 +219,17 @@ function bindEvents() {
   if (healthInput) healthInput.addEventListener('keydown', e => { if (e.key === 'Enter') addHealth(); });
 
   // Ajout allergie
-  const addAllergy = () => {
+  // NB : le handler local ne doit PAS s'appeler « addAllergy » — il masquerait
+  // la fonction du module et se rappellerait lui-même (récursion infinie,
+  // stack overflow silencieux au clic). Bug corrigé le 14/11.
+  const handleAddAllergy = () => {
     const input = document.getElementById('allergyInput');
     if (addAllergy(input.value)) input.value = '';
   };
   const addAllergyBtn = document.getElementById('addAllergyBtn');
-  if (addAllergyBtn) addAllergyBtn.addEventListener('click', addAllergy);
+  if (addAllergyBtn) addAllergyBtn.addEventListener('click', handleAddAllergy);
   const allergyInput = document.getElementById('allergyInput');
-  if (allergyInput) allergyInput.addEventListener('keydown', e => { if (e.key === 'Enter') addAllergy(); });
+  if (allergyInput) allergyInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleAddAllergy(); });
 
   // Effacements ciblés
   const clearMedsBtn = document.getElementById('clearMedsBtn');
