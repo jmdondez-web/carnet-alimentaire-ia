@@ -9,6 +9,7 @@ import { classifyFinal } from "../js/voice.js";
 import { filterMealsByDays, waterRowsByDays } from "../js/print.js";
 import { computeStats, critiqueLocale, FAMILLES } from "../js/trends.js";
 import { extractPhotoVerdict } from "../js/ia-external.js";
+import { matchInteractions } from "../js/ia.js";
 import { getIAEndpoint, isProxyConfigured } from "../js/ia-settings.js";
 import { sortMealsByDatetimeDesc, updateMealInList, removeMealFromList } from "../js/storage.js";
 
@@ -246,6 +247,41 @@ test("collision interface native : Storage.* exige « import * as Storage »", (
     }
   }
 });
+
+// Interactions locales multiples (régression bug 15/11 : un repas multi-aliments
+// ne rapportait que la PREMIÈRE interaction détectée, les autres étaient masquées).
+console.log("");
+console.log("Interactions locales (repas multi-aliments) :");
+{
+  const base = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "connaissances.json"), "utf8"));
+  const repas = "1 saucisse sèche, 4 surimis et une tartine de fromage blanc salé";
+
+  test("aucun med/condition → aucune interaction", () => {
+    assert.equal(matchInteractions(base, repas, [], []).length, 0);
+  });
+
+  test("lévothyroxine + hypertension → 2 interactions (calcium ET sel), pas une seule", () => {
+    const meds = [{ name: "levothyrox", condition: "" }];
+    const found = matchInteractions(base, repas, meds, ["hypertension"]);
+    const aliments = found.map(i => i.aliment);
+    assert.ok(aliments.includes("calcium (lait, produits laitiers)"), "règle calcium absente : " + aliments);
+    assert.ok(aliments.includes("sel"), "règle sel absente : " + aliments);
+    assert.equal(found.length, 2);
+  });
+
+  test("IMAO + hypertension → la plus grave d'abord (charcuterie urgence-relative avant sel)", () => {
+    const meds = [{ name: "moclobémide", condition: "" }];
+    const found = matchInteractions(base, repas, meds, ["hypertension"]);
+    assert.ok(found.length >= 2, "attendu ≥ 2 interactions, obtenu " + found.length);
+    assert.equal(found[0].aliment, "charcuterie");
+    assert.equal(found[0].gravite, "urgence-relative");
+  });
+
+  test("base vide ou nulle → liste vide, pas de crash", () => {
+    assert.deepEqual(matchInteractions(null, repas, [{ name: "levothyrox" }], []), []);
+    assert.deepEqual(matchInteractions({ interactions: [] }, repas, [{ name: "levothyrox" }], []), []);
+  });
+}
 
 // Non-régression : la suppression d'un repas ne retire QUE ce repas,
 // tolère les listes vides/nulles et préserve l'ordre des autres.
