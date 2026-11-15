@@ -24,13 +24,21 @@ function normalize(str) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+// Croisement repas ↔ base d'interactions — pur, testé dans tests/run-tests.mjs.
 // Détecte les interactions aliment-médicament en croisant :
 // - les médicaments de l'utilisateur (nom, DCI, marque),
 // - l'indication associée à chaque médicament,
 // - les problèmes de santé déclarés (ex: "hypertension" déclenche la règle sel).
-export function detectInteractionLocal(mealText, userMeds, healthConditions = []) {
-  if (!connaissances || !connaissances.interactions) return null;
-  if ((!userMeds || userMeds.length === 0) && (!healthConditions || healthConditions.length === 0)) return null;
+// Retourne TOUTES les règles qui matchent, triées par gravité décroissante
+// (urgence-relative > attention > info) puis par ordre de la base.
+// Un repas réel mélange souvent plusieurs aliments déclencheurs
+// (ex: charcuterie + fromage blanc salé = règles charcuterie ET calcium ET sel) :
+// s'arrêter à la première (ancien return dans la boucle) masquait les autres.
+const GRAVITE_ORDER = { "urgence-relative": 0, "attention": 1, "info": 2 };
+
+export function matchInteractions(base, mealText, userMeds, healthConditions = []) {
+  if (!base || !base.interactions) return [];
+  if ((!userMeds || userMeds.length === 0) && (!healthConditions || healthConditions.length === 0)) return [];
 
   const mealNorm = normalize(mealText);
   const userMedNames = (userMeds || []).map(m => normalize(m.name)).filter(Boolean);
@@ -39,7 +47,8 @@ export function detectInteractionLocal(mealText, userMeds, healthConditions = []
     ...(healthConditions || []).map(normalize).filter(c => c)
   ];
 
-  for (let interaction of connaissances.interactions) {
+  const found = [];
+  for (let interaction of base.interactions) {
     // Détection aliment : via synonymes (ou nom d'aliment par défaut)
     const synonymes = interaction.synonymes && interaction.synonymes.length > 0
       ? interaction.synonymes
@@ -55,15 +64,29 @@ export function detectInteractionLocal(mealText, userMeds, healthConditions = []
     });
 
     if (medMatch) {
-      return {
+      found.push({
         aliment: interaction.aliment,
         gravite: interaction.gravite || "attention",
         message: interaction.message,
         source: "local"
-      };
+      });
     }
   }
-  return null;
+
+  // Tri par gravité (ordre stable pour les égalités)
+  return found.sort((a, b) =>
+    (GRAVITE_ORDER[a.gravite] ?? 3) - (GRAVITE_ORDER[b.gravite] ?? 3)
+  );
+}
+
+// Toutes les interactions locales détectées pour ce repas.
+export function detectAllInteractionsLocal(mealText, userMeds, healthConditions = []) {
+  return matchInteractions(connaissances, mealText, userMeds, healthConditions);
+}
+
+// L'interaction la plus grave (bannière d'alerte, interactionDetected du repas).
+export function detectInteractionLocal(mealText, userMeds, healthConditions = []) {
+  return detectAllInteractionsLocal(mealText, userMeds, healthConditions)[0] || null;
 }
 
 // Détecte les allergènes déclarés par l'utilisateur dans la description du repas.
@@ -101,25 +124,30 @@ export function noInteractionMessage() {
          "Cette base ne couvre pas toutes les interactions connues — si tu as un doute, montre ton carnet à ton médecin ou pharmacien.";
 }
 
+// Analyse locale complète : TOUTES les interactions (plus seulement la première)
+// + allergènes. Le texte concatène chaque message ; la bannière garde la plus grave.
+function analyseLocal(mealText, userMeds, healthConditions, allergies, sourceLabel) {
+  const interactions = detectAllInteractionsLocal(mealText, userMeds, healthConditions);
+  const allergens = detectAllergensLocal(mealText, allergies);
+
+  const messages = interactions.map(i => i.message);
+  if (messages.length === 0) messages.push(noInteractionMessage());
+  allergens.forEach(a => messages.push(a.message));
+
+  return {
+    success: true,
+    analysis: messages.join("\n\n"),
+    interaction: interactions[0] || (allergens.length > 0 ? allergens[0] : null),
+    allergens,
+    source: sourceLabel
+  };
+}
+
 export async function analyseRepas(mealText, photoBase64, userMeds, healthConditions = [], allergies = []) {
   const settings = getIASettings();
 
   if (settings.mode === "local" || !hasValidAPIKey()) {
-    const interaction = detectInteractionLocal(mealText, userMeds, healthConditions);
-    const allergens = detectAllergensLocal(mealText, allergies);
-
-    const messages = [];
-    if (interaction) messages.push(interaction.message);
-    else messages.push(noInteractionMessage());
-    allergens.forEach(a => messages.push(a.message));
-
-    return {
-      success: true,
-      analysis: messages.join("\n\n"),
-      interaction: interaction || (allergens.length > 0 ? allergens[0] : null),
-      allergens,
-      source: "local"
-    };
+    return analyseLocal(mealText, userMeds, healthConditions, allergies, "local");
   }
 
   try {
@@ -140,38 +168,14 @@ export async function analyseRepas(mealText, photoBase64, userMeds, healthCondit
         photoVerdict: externalResult.photoVerdict || null
       };
     } else {
-      const localResult = detectInteractionLocal(mealText, userMeds, healthConditions);
-      const allergens = detectAllergensLocal(mealText, allergies);
-      const messages = [];
-      if (localResult) messages.push(localResult.message);
-      else messages.push(noInteractionMessage());
-      allergens.forEach(a => messages.push(a.message));
-
-      return {
-        success: true,
-        analysis: messages.join("\n\n"),
-        interaction: localResult || (allergens.length > 0 ? allergens[0] : null),
-        allergens,
-        source: "local (fallback)",
-        fallbackReason: externalResult.error
-      };
+      const localResult = analyseLocal(mealText, userMeds, healthConditions, allergies, "local (fallback)");
+      localResult.fallbackReason = externalResult.error;
+      return localResult;
     }
   } catch(e) {
     console.error("Erreur analyse externe:", e);
-    const localResult = detectInteractionLocal(mealText, userMeds, healthConditions);
-    const allergens = detectAllergensLocal(mealText, allergies);
-    const messages = [];
-    if (localResult) messages.push(localResult.message);
-    else messages.push(noInteractionMessage());
-    allergens.forEach(a => messages.push(a.message));
-
-    return {
-      success: true,
-      analysis: messages.join("\n\n"),
-      interaction: localResult || (allergens.length > 0 ? allergens[0] : null),
-      allergens,
-      source: "local (erreur API)",
-      fallbackReason: e.message
-    };
+    const localResult = analyseLocal(mealText, userMeds, healthConditions, allergies, "local (erreur API)");
+    localResult.fallbackReason = e.message;
+    return localResult;
   }
 }
