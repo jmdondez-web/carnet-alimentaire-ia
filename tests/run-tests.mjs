@@ -40,8 +40,7 @@ test("séquence réelle « salade de lentilles » → 1 ajout + 2 révisions, 0 
     if (v.action === "revise") revisions.push(v);
     last = t;
   }
-  assert.equa
-l(appends.length, 1);
+  assert.equal(appends.length, 1);
   assert.equal(appends[0], "salade");
   assert.equal(revisions.length, 2);
   assert.equal(revisions[1].to, "salade de lentilles");
@@ -97,8 +96,7 @@ test("stats : périmètre 30 jours exclu le repas hors période", () => {
   assert.equal(s.alertes, 1);
 });
 test("stats : portions standard par famille (salade → fruits & légumes)", () => {
-  const s = computeStats(30, data
-30, NOW);
+  const s = computeStats(30, data30, NOW);
   const fl = s.famCounts.find(f => f.nom === "Fruits & légumes");
   const gras = s.famCounts.find(f => f.nom === "Plats gras ou sucrés");
   assert.equal(fl.portions, 2); // 2 repas avec fruits & légumes (salade de lentilles, soupe) ; le « salade » hors période n'est pas compté
@@ -137,8 +135,7 @@ test("critique locale : alerte PNNS 5 portions si fruits & légumes rares", () =
       { datetime: "2026-11-03T08:00", text: "pain et beurre" },
       { datetime: "2026-11-03T12:00", text: "pâtes au fromage" },
       { datetime: "2026-11-02T12:00", text: "steak frites" },
-      { d
-atetime: "2026-11-02T19:00", text: "riz et poulet" },
+      { datetime: "2026-11-02T19:00", text: "riz et poulet" },
       { datetime: "2026-11-01T12:00", text: "pizza" },
       { datetime: "2026-11-01T19:00", text: "salade verte" }
     ],
@@ -184,8 +181,7 @@ test("repas sans date valide → en fin de liste, sans crash", () => {
     { id: 1, text: "sans date", datetime: "" },
     { id: 2, text: "daté", datetime: "2026-11-09T12:00" }
   ];
-  const sorted = sortMealsByDatetimeDes
-c(list);
+  const sorted = sortMealsByDatetimeDesc(list);
   assert.deepEqual(sorted.map(m => m.id), [2, 1]);
 });
 test("updateMealInList remplace par id, conserve les autres et la position", () => {
@@ -230,8 +226,7 @@ test("absence de tag → verdict null, texte intact (aucune invention côté cli
 });
 
 // Non-régression (13/11) : ui.js appelait Storage.sortMealsByDatetimeDesc alors
-// que « Storage » est une interface native du
- navigateur (localStorage) — TypeError
+// que « Storage » est une interface native du navigateur (localStorage) — TypeError
 // au premier rendu d'une liste NON vide (liste vide = retour anticipé, donc badge OK
 // à l'init puis crash au premier enregistrement). Un module qui utilise Storage.*
 // doit importer le namespace ; sinon l'identifiant résout vers l'interface native.
