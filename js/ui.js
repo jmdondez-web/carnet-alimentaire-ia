@@ -18,6 +18,13 @@ export function setMealDeleteHandler(fn) {
   mealDeleteHandler = fn;
 }
 
+// L'alerte rouge (interaction la plus grave) ne s'affiche QUE pour une analyse
+// locale : en mode IA externe, interactionDetected.message contient l'analyse
+// entière → elle doublonnait le bloc vert. Pur, testé dans tests/run-tests.mjs.
+export function showInteractionBadge(meal) {
+  return !!meal.interactionDetected && meal.iaSource !== "external";
+}
+
 export function renderMeals(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -34,7 +41,7 @@ export function renderMeals(containerId) {
     <li>
       <div class="meal-date">${new Date(meal.datetime).toLocaleString()}</div>
       <div class="meal-text">${escapeHtml(meal.text || "")}</div>
-      ${meal.interactionDetected ? `<div class="alert-mini">⚠️ ${escapeHtml(meal.interactionDetected.message)}</div>` : ""}
+      ${showInteractionBadge(meal) ? `<div class="alert-mini">⚠️ ${escapeHtml(meal.interactionDetected.message)}</div>` : ""}
       ${meal.analysis ? `<div class="meal-analysis"><span class="meal-analysis-head">🤖 Analyse — ${meal.iaSource === "external" ? "IA externe" : "règles locales"}</span>${escapeHtml(meal.analysis)}</div>` : ""}
       ${meal.photo ? `<img src="${meal.photo}" class="meal-photo" alt="photo">` : ""}
       <div class="meal-actions">

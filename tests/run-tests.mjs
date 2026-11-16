@@ -10,6 +10,7 @@ import { filterMealsByDays, waterRowsByDays } from "../js/print.js";
 import { computeStats, critiqueLocale, FAMILLES } from "../js/trends.js";
 import { extractPhotoVerdict } from "../js/ia-external.js";
 import { matchInteractions } from "../js/ia.js";
+import { showInteractionBadge } from "../js/ui.js";
 import { getIAEndpoint, isProxyConfigured } from "../js/ia-settings.js";
 import { sortMealsByDatetimeDesc, updateMealInList, removeMealFromList } from "../js/storage.js";
 
@@ -275,6 +276,32 @@ console.log("Interactions locales (repas multi-aliments) :");
   test("base vide ou nulle → liste vide, pas de crash", () => {
     assert.deepEqual(matchInteractions(null, repas, [{ name: "levothyrox" }], []), []);
     assert.deepEqual(matchInteractions({ interactions: [] }, repas, [{ name: "levothyrox" }], []), []);
+  });
+}
+
+// Historique : l'alerte rouge ne doublonne plus l'analyse en mode IA externe
+// (bug 16/11 : interactionDetected.message = analyse entière → 2 affichages).
+console.log("");
+console.log("Historique — badge d'interaction (mode local vs IA externe) :");
+{
+  const withAlert = { iaSource: "local", interactionDetected: { message: "⚠️ calcium + lévothyroxine" } };
+
+  test("mode local : l'alerte rouge reste affichée (structure inchangée)", () => {
+    assert.equal(showInteractionBadge(withAlert), true);
+  });
+
+  test("mode IA externe : seule l'étiquette verte, pas de doublon", () => {
+    assert.equal(showInteractionBadge({ iaSource: "external", interactionDetected: { message: "analyse" } }), false);
+  });
+
+  test("fallback local (erreur API) : l'alerte reste affichée", () => {
+    assert.equal(showInteractionBadge({ iaSource: "local (fallback)", interactionDetected: { message: "x" } }), true);
+  });
+
+  test("sans interaction détectée : rien à afficher, quel que soit le mode", () => {
+    assert.equal(showInteractionBadge({ iaSource: "external" }), false);
+    assert.equal(showInteractionBadge({ iaSource: "local" }), false);
+    assert.equal(showInteractionBadge({}), false);
   });
 }
 
