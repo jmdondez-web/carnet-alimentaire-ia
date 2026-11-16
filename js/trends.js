@@ -2,6 +2,7 @@
 // Transparence obligatoire : le badge signale TOUJOURS quel type d'analyse a produit la critique.
 // Fonctions pures exportées (tests : tests/run-tests.mjs) — pas de DOM ni localStorage dedans.
 import * as Storage from './storage.js';
+import { localDateISO } from './storage.js';
 import { getIASettings, hasValidAPIKey } from './ia-settings.js';
 import { analyseTendances } from './ia-external.js';
 
@@ -63,7 +64,7 @@ export function computeStats(days, data, now) {
       ? entry[1].reduce(function(s, e) { return s + (e.cl || 0); }, 0)
       : (typeof entry[1] === "number" ? entry[1] : 0);
     if (days) {
-      const lim = new Date(ref - days * 86400000).toISOString().slice(0, 10);
+      const lim = localDateISO(new Date(ref - days * 86400000));
       if (entry[0] < lim) continue;
     }
     waterSum += total;

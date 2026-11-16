@@ -10,9 +10,11 @@ import { filterMealsByDays, waterRowsByDays } from "../js/print.js";
 import { computeStats, critiqueLocale, FAMILLES } from "../js/trends.js";
 import { extractPhotoVerdict } from "../js/ia-external.js";
 import { matchInteractions } from "../js/ia.js";
+import { hasExternalWarning } from "../js/ia.js";
 import { showInteractionBadge } from "../js/ui.js";
 import { getIAEndpoint, isProxyConfigured } from "../js/ia-settings.js";
 import { sortMealsByDatetimeDesc, updateMealInList, removeMealFromList } from "../js/storage.js";
+import { localDateISO, localDatetimeISO } from "../js/storage.js";
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -278,6 +280,41 @@ console.log("Interactions locales (repas multi-aliments) :");
     assert.deepEqual(matchInteractions({ interactions: [] }, repas, [{ name: "levothyrox" }], []), []);
   });
 }
+
+// Heuristique d'alerte IA externe — « Aucune interaction connue détectée »
+// ne doit PAS être comptée comme alerte (l'ancien test sur le mot
+// « interaction » déclenchait la bannière pour une absence d'alerte).
+console.log("");
+console.log("Alerte IA externe (heuristique hasExternalWarning) :");
+test("absence d'interaction explicite → pas d'alerte", () => {
+  assert.equal(hasExternalWarning("Aucune interaction connue détectée."), false);
+  assert.equal(hasExternalWarning("Repas équilibré : salade et poulet."), false);
+  assert.equal(hasExternalWarning(""), false);
+});
+
+test("alerte réelle → alerte", () => {
+  assert.equal(hasExternalWarning("⚠️ Attention : le pamplemousse peut interagir avec la simvastatine. Consulte ton médecin."), true);
+  assert.equal(hasExternalWarning("Ton repas contient des fruits à coque, déclarés comme allergie. Vérifie les étiquettes."), true);
+  assert.equal(hasExternalWarning("Attention au sel avec ton hypertension."), true);
+});
+
+// Dates locales : toISOString() renvoie l'heure UTC — un repas enregistré
+// à 00h30 local (Belgique) portait la date/heure de la veille en UTC.
+console.log("");
+console.log("Clés de date locales (localDateISO / localDatetimeISO) :");
+test("composants locaux restitués, quel que soit le fuseau d'exécution", () => {
+  const d = new Date(2026, 10, 16, 9, 5); // composants LOCAUX par construction
+  assert.equal(localDatetimeISO(d), "2026-11-16T09:05");
+  assert.equal(localDateISO(d), "2026-11-16");
+});
+
+test("fin de mois et minuit locaux", () => {
+  const d = new Date(2026, 11, 31, 0, 0);
+  assert.equal(localDateISO(d), "2026-12-31");
+  assert.equal(localDatetimeISO(d), "2026-12-31T00:00");
+  const e = new Date(2027, 0, 1, 23, 59);
+  assert.equal(localDateISO(e), "2027-01-01");
+});
 
 // Historique : l'alerte rouge ne doublonne plus l'analyse en mode IA externe
 // (bug 16/11 : interactionDetected.message = analyse entière → 2 affichages).

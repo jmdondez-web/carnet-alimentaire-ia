@@ -79,9 +79,7 @@ export function renderIASettingsPanel(containerId) {
 
         <div class="info-box" id="getKeyInfo">
           💡 <strong>Obtention d'une clé API gratuite :</strong><br>
-          ${settings.provider === 'mistral' ?
-            '➡️ https://console.mistral.ai → Créer un compte → API Keys → Créer une clé' :
-            '➡️ https://console.groq.com → Créer un compte → API Keys → Créer une clé'}
+          ➡️ https://console.mistral.ai → Créer un compte → API Keys → Créer une clé
         </div>
 
         <div class="info-box consent-info">
@@ -158,9 +156,7 @@ function bindSettingsEvents(containerId) {
       const infoBox = container.querySelector('#getKeyInfo');
       if (infoBox) {
         infoBox.innerHTML = `💡 <strong>Obtention d'une clé API gratuite :</strong><br>
-          ${provider === 'mistral' ?
-            '➡️ https://console.mistral.ai → Créer un compte → API Keys → Créer une clé' :
-            '➡️ https://console.groq.com → Créer un compte → API Keys → Créer une clé'}`;
+          ➡️ https://console.mistral.ai → Créer un compte → API Keys → Créer une clé`;
       }
 
       const visionCheckbox = container.querySelector('#visionEnabled');
@@ -203,7 +199,7 @@ function bindSettingsEvents(containerId) {
     saveBtn.addEventListener('click', async () => {
       const mode = container.querySelector('input[name="iaMode"]:checked')?.value || 'local';
       const provider = providerSelect?.value || 'mistral';
-      const model = modelSelect?.value || 'mistral-tiny';
+      const model = modelSelect?.value || 'mistral-small-latest';
       const apiKey = container.querySelector('#apiKeyInput')?.value || '';
       const visionEnabled = container.querySelector('#visionEnabled')?.checked || false;
 
@@ -258,18 +254,17 @@ export function showIAModeIndicator(containerId) {
   let modeText = "";
   let modeClass = "";
 
-  if (settings.mode === "local") {
-    modeText = "📱 Mode local (hors ligne, privé, aucune donnée transmise)";
-    modeClass = "mode-local";
-  } else if (hasKey && consented) {
+  if (settings.mode === "external" && hasKey && consented) {
     modeText = `🌐 Mode externe actif (${PROVIDERS[settings.provider]?.name || settings.provider}) - données envoyées à l'API`;
     modeClass = "mode-external";
-  } else if (settings.mode === "external" && !hasKey) {
-    modeText = "⚠️ Mode externe sans clé API → fonctionnement local (aucune donnée transmise)";
+  } else if (settings.mode === "external") {
+    // Consentement révoqué ou mode invalide : aucun appel externe ne partira,
+    // hasValidAPIKey() est faux et ia.js retombe sur l'analyse locale.
+    modeText = "⚠️ Mode externe inactif (consentement absent) → fonctionnement local, aucune donnée transmise";
     modeClass = "mode-warning";
   } else {
-    modeText = "⚙️ Mode IA non configuré";
-    modeClass = "mode-warning";
+    modeText = "📱 Mode local (hors ligne, privé, aucune donnée transmise)";
+    modeClass = "mode-local";
   }
 
   container.innerHTML = `<div class="ia-mode-indicator ${modeClass}">${modeText}</div>`;

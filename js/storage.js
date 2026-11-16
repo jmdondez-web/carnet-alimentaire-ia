@@ -10,6 +10,20 @@ export const KEYS = {
   REPAS_DRAFT: "carnet_repas_draft"
 };
 
+// === CLÉS DE DATE LOCALES (testées : tests/run-tests.mjs) ===
+// toISOString() donne l'heure UTC : en Belgique, un repas « sur le pouce »
+// enregistré à 00h30 local portait l'heure (ou la date) de la veille UTC.
+// Ces helpers rendent la date et l'heure LOCALES du téléphone.
+export function localDateISO(date) {
+  const d = date || new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+export function localDatetimeISO(date) {
+  const d = date || new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
 // === REPAS ===
 export function loadRepas() {
   const stored = localStorage.getItem(KEYS.REPAS);

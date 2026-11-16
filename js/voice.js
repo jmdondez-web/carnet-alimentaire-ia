@@ -89,7 +89,3 @@ export function stopVoice() {
   }
   isListening = false;
 }
-
-export function isVoiceActive() {
-  return isListening;
-}

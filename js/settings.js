@@ -6,6 +6,7 @@ import * as UISettings from './ui-settings.js';
 import * as IA from './ia.js';
 import * as PWA from './pwa.js';
 import { revokeConsent, getConsentDate } from './consent.js';
+import { updateIASetting } from './ia-settings.js';
 
 let repasList = [];
 
@@ -181,11 +182,9 @@ function revokeExternalConsent() {
   const when = consentDate ? ' (donné le ' + new Date(consentDate).toLocaleString() + ')' : '';
   if (!confirm('⚠️ Révoquer le consentement IA externe' + when + ' ?\nLe mode IA externe sera désactivé et reviendra au mode local. Aucune donnée ne quitte plus ton téléphone.')) return;
   revokeConsent();
-  import('./ia-settings.js').then(m => {
-    m.updateIASetting('mode', 'local');
-    UISettings.renderIASettingsPanel('iaSettingsPanel');
-    toast('Consentement révoqué — mode local');
-  });
+  updateIASetting('mode', 'local');
+  UISettings.renderIASettingsPanel('iaSettingsPanel');
+  toast('Consentement révoqué — mode local');
 }
 
 // --- Événements ---

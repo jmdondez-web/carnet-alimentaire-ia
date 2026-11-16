@@ -1,4 +1,4 @@
-import { loadWaterHistory, saveWaterHistory } from './storage.js';
+import { loadWaterHistory, saveWaterHistory, localDateISO } from './storage.js';
 
 // history : { "YYYY-MM-DD": [ {cl: 33, time: "2026-10-21T14:32:00"}, ... ] }
 // Migration automatique : ancien format { "YYYY-MM-DD": 153 } → [{cl:153, time:"12:00"}] conservé comme total du jour.
@@ -23,13 +23,13 @@ export function initWater() {
 }
 
 export function getWaterTotal(date = null) {
-  const targetDate = date || new Date().toISOString().slice(0, 10);
+  const targetDate = date || localDateISO();
   const entries = history[targetDate] || [];
   return entries.reduce((sum, e) => sum + (e.cl || 0), 0);
 }
 
 export function addWater(cl, date = null, time = null) {
-  const targetDate = date || new Date().toISOString().slice(0, 10);
+  const targetDate = date || localDateISO();
   const targetTime = time || new Date().toTimeString().slice(0, 5);
   if (!Array.isArray(history[targetDate])) history[targetDate] = migrateOld(history[targetDate]);
   history[targetDate].push({ cl, time: targetTime });
@@ -38,7 +38,7 @@ export function addWater(cl, date = null, time = null) {
 }
 
 export function resetWater(date = null) {
-  const targetDate = date || new Date().toISOString().slice(0, 10);
+  const targetDate = date || localDateISO();
   history[targetDate] = [];
   saveWaterHistory(history);
   return 0;
@@ -53,7 +53,7 @@ export function getWaterHistory(lastDays = 7) {
 }
 
 export function getWaterEntries(date = null) {
-  const targetDate = date || new Date().toISOString().slice(0, 10);
+  const targetDate = date || localDateISO();
   return history[targetDate] || [];
 }
 
