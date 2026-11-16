@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { classifyFinal } from "../js/voice.js";
 import { filterMealsByDays, waterRowsByDays } from "../js/print.js";
-import { computeStats, critiqueLocale, FAMILLES } from "../js/trends.js";
+import { computeStats, critiqueLocale, formatCritiqueIA, FAMILLES } from "../js/trends.js";
 import { extractPhotoVerdict } from "../js/ia-external.js";
 import { matchInteractions } from "../js/ia.js";
 import { hasExternalWarning } from "../js/ia.js";
@@ -148,6 +148,22 @@ test("critique locale : alerte PNNS 5 portions si fruits & légumes rares", () =
   const txt = critiqueLocale(s);
   assert.ok(txt.includes("5 portions par jour"));
   assert.ok(txt.includes("3 avec des données")); // période 30 jours, 3 jours d'utilisation
+});
+
+test("critique IA : balises converties en titres lisibles", () => {
+  const txt = formatCritiqueIA("[POSITIF] Fruits régulièrement.\n[ATTENTION] Hydratation faible.\n[REPERE] Vise ~150 cl d'eau par jour.");
+  assert.ok(txt.includes("Points positifs"));
+  assert.ok(txt.includes("Points d'attention"));
+  assert.ok(txt.includes("Repère PNNS"));
+  assert.ok(!txt.includes("[POSITIF]"));
+});
+test("critique IA : texte sans balise inchangé, entrée vide tolérée", () => {
+  assert.equal(formatCritiqueIA("Analyse simple"), "Analyse simple");
+  assert.equal(formatCritiqueIA(""), "");
+});
+test("critique IA : balise en milieu de ligne reconnue (robustesse modèle)", () => {
+  const txt = formatCritiqueIA("Observations [POSITIF] tendance favorable");
+  assert.ok(!txt.includes("[POSITIF]"));
 });
 
 console.log("Paramètres IA (endpoint) :");
