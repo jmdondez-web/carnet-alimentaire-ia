@@ -33,6 +33,14 @@ export function leadingEmoji(str) {
   return m ? m[0] : "";
 }
 
+// Préfixe d'affichage du repas : l'emoji enregistré, SAUF si le texte commence
+// déjà par un emoji (les chips créées via le champ d'ajout ont un libellé
+// complet, emoji inclus, dans leur texte). Pur, testé dans tests/run-tests.mjs.
+export function mealEmojiPrefix(meal) {
+  if (!meal || !meal.emoji) return "";
+  return leadingEmoji(meal.text || "") ? "" : meal.emoji + " ";
+}
+
 export function renderMeals(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -48,7 +56,7 @@ export function renderMeals(containerId) {
   container.innerHTML = sorted.map(meal => `
     <li>
       <div class="meal-date">${new Date(meal.datetime).toLocaleString()}</div>
-      <div class="meal-text">${meal.emoji ? meal.emoji + " " : ""}${escapeHtml(meal.text || "")}</div>
+      <div class="meal-text">${mealEmojiPrefix(meal)}${escapeHtml(meal.text || "")}</div>
       ${showInteractionBadge(meal) ? `<div class="alert-mini">⚠️ ${escapeHtml(meal.interactionDetected.message)}</div>` : ""}
       ${meal.analysis ? `<div class="meal-analysis"><span class="meal-analysis-head">🤖 Analyse — ${meal.iaSource === "external" ? "IA externe" : "règles locales"}</span>${escapeHtml(meal.analysis)}</div>` : ""}
       ${meal.photo ? `<img src="${meal.photo}" class="meal-photo" alt="photo">` : ""}

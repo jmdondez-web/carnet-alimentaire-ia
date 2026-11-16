@@ -11,7 +11,7 @@ import { computeStats, critiqueLocale, formatCritiqueIA, FAMILLES } from "../js/
 import { extractPhotoVerdict } from "../js/ia-external.js";
 import { matchInteractions } from "../js/ia.js";
 import { hasExternalWarning } from "../js/ia.js";
-import { showInteractionBadge, leadingEmoji } from "../js/ui.js";
+import { showInteractionBadge, leadingEmoji, mealEmojiPrefix } from "../js/ui.js";
 import { getIAEndpoint, isProxyConfigured } from "../js/ia-settings.js";
 import { sortMealsByDatetimeDesc, updateMealInList, removeMealFromList } from "../js/storage.js";
 import { localDateISO, localDatetimeISO } from "../js/storage.js";
@@ -258,6 +258,20 @@ test("libellé sans emoji → chaîne vide, jamais undefined", () => {
   assert.equal(leadingEmoji("Sandwich bureau"), "");
   assert.equal(leadingEmoji(""), "");
   assert.equal(leadingEmoji(null), "");
+});
+
+// Préfixe d'emoji du repas : jamais de doublon quand le texte commence
+// déjà par un emoji (chips créées via le champ d'ajout : text = libellé).
+test("mealEmojiPrefix : emoji ajouté seulement si le texte n'en a pas", () => {
+  assert.equal(mealEmojiPrefix({ emoji: "🌭", text: "Saucisse sèche" }), "🌭 ");
+  assert.equal(mealEmojiPrefix({ emoji: "🍕", text: "🍕 Pizza" }), "");
+  assert.equal(mealEmojiPrefix({ text: "Pizza" }), "");
+  assert.equal(mealEmojiPrefix(null), "");
+});
+
+test("mealEmojiPrefix : repas sans texte (photo seule)", () => {
+  assert.equal(mealEmojiPrefix({ emoji: "📷", text: "(photo)" }), "📷 ");
+  assert.equal(mealEmojiPrefix({ emoji: "📷", text: "" }), "📷 ");
 });
 
 // Non-régression (13/11) : ui.js appelait Storage.sortMealsByDatetimeDesc alors
