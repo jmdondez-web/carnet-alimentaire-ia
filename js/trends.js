@@ -126,6 +126,15 @@ export function critiqueLocale(stats) {
   return L.join("\n");
 }
 
+// Critique IA externe : le prompt demande un format balisé. Pur, testé dans tests/run-tests.mjs.
+// Convertit les balises en titres lisibles, tolère une balise en milieu de ligne (robustesse modèle).
+export function formatCritiqueIA(raw) {
+  return (raw || "").trim()
+    .replace(/\[POSITIF\]/g, "✅ Points positifs :")
+    .replace(/\[ATTENTION\]/g, "⚠️ Points d'attention :")
+    .replace(/\[REPERE\]/g, "🎯 Repère PNNS :");
+}
+
 export function buildExternalPrompt(stats) {
   const famText = stats.famCounts.map(function(f) { return f.nom + " : " + f.portions + " portions (standard)"; }).join("\n");
   const mealsText = stats.meals.slice(0, 80).map(function(m) {
@@ -199,7 +208,7 @@ async function runCritique(stats) {
     const res = await analyseTendances(buildExternalPrompt(stats));
     if (res.success && res.analysis) {
       setBadge("external", "données transmises le temps de l'analyse, rien de stocké");
-      critiqueEl.textContent = res.analysis;
+      critiqueEl.textContent = formatCritiqueIA(res.analysis);
       return;
     }
     setBadge("local", "repli : IA externe indisponible (" + (res.error || "erreur") + ")");
