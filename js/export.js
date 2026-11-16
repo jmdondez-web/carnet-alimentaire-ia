@@ -1,4 +1,4 @@
-import { loadWaterHistory, loadHealthConditions, loadAllergies, saveRepas, loadRepas, saveWaterHistory, saveHealthConditions, saveAllergies } from './storage.js';
+import { loadWaterHistory, loadHealthConditions, loadAllergies, saveRepas, loadRepas, saveWaterHistory, saveHealthConditions, saveAllergies, loadMeds, saveMeds } from './storage.js';
 import { getMeds } from './medications.js';
 
 export function exportJSON(repasList) {
@@ -50,7 +50,6 @@ export async function importJSON(file) {
 
   // --- Médicaments : fusion + dédoublonnage par name (clé basse) ---
   if (Array.isArray(data.medicaments)) {
-    const { loadMeds, saveMeds } = await import('./storage.js');
     const existing = loadMeds();
     const existingNames = new Set(existing.map(m => m.name));
     const newMeds = data.medicaments.filter(m => m && m.name && !existingNames.has(m.name));

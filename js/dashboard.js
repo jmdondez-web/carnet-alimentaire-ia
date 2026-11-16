@@ -1,6 +1,7 @@
 // ========== TABLEAU DE BORD PNNS ==========
 // Classification éducative des repas par groupes d'aliments (repères PNNS)
 // Éducatif uniquement : pas de calories, pas de jugement.
+import { localDateISO } from './storage.js';
 
 const GROUPES = {
   fruits_legumes: {
@@ -61,7 +62,7 @@ export function renderDashboard(containerId, repasList) {
   if (!container) return;
 
   const byDay = aggregateByDay(repasList);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateISO();
   const todayData = byDay[today] || { count: 0, groups: {} };
 
   const flToday = todayData.groups.fruits_legumes || 0;
@@ -71,7 +72,7 @@ export function renderDashboard(containerId, repasList) {
   for (let i = 0; i < 7; i++) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
+    const key = localDateISO(d);
     if (byDay[key]) {
       poisson7j += byDay[key].groups.poisson || 0;
       legum7j += byDay[key].groups.legumineuses || 0;

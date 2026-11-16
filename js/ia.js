@@ -84,11 +84,6 @@ export function detectAllInteractionsLocal(mealText, userMeds, healthConditions 
   return matchInteractions(connaissances, mealText, userMeds, healthConditions);
 }
 
-// L'interaction la plus grave (bannière d'alerte, interactionDetected du repas).
-export function detectInteractionLocal(mealText, userMeds, healthConditions = []) {
-  return detectAllInteractionsLocal(mealText, userMeds, healthConditions)[0] || null;
-}
-
 // Détecte les allergènes déclarés par l'utilisateur dans la description du repas.
 // Strictement éducatif : rappel de vérifier les étiquettes et de contacter un médecin.
 export function detectAllergensLocal(mealText, allergies = []) {
@@ -143,6 +138,16 @@ function analyseLocal(mealText, userMeds, healthConditions, allergies, sourceLab
   };
 }
 
+// L'IA externe a-t-elle relevé une alerte ? Pur, testé dans tests/run-tests.mjs.
+// L'ancienne heuristique testait le mot « interaction »... que contient aussi
+// la phrase négative « Aucune interaction connue détectée » : toute analyse
+// sans alerte était marquée comme alerte (bannière + compteur tendances faux).
+export function hasExternalWarning(analysis) {
+  const t = analysis || "";
+  if (/aucune\s+interaction/i.test(t)) return false;
+  return t.includes("⚠️") || /interaction/i.test(t) || /allerg/i.test(t) || /attention/i.test(t);
+}
+
 export async function analyseRepas(mealText, photoBase64, userMeds, healthConditions = [], allergies = []) {
   const settings = getIASettings();
 
@@ -154,15 +159,10 @@ export async function analyseRepas(mealText, photoBase64, userMeds, healthCondit
     const externalResult = await analyseExterne(mealText, photoBase64, userMeds, healthConditions, allergies);
 
     if (externalResult.success) {
-      const hasInteraction = externalResult.analysis.includes("⚠️") ||
-                             externalResult.analysis.includes("interaction") ||
-                             externalResult.analysis.includes("allerg") ||
-                             externalResult.analysis.includes("Attention");
-
       return {
         success: true,
         analysis: externalResult.analysis,
-        interaction: hasInteraction ? { message: externalResult.analysis, gravite: "attention", source: "external" } : null,
+        interaction: hasExternalWarning(externalResult.analysis) ? { message: externalResult.analysis, gravite: "attention", source: "external" } : null,
         source: "external",
         provider: settings.provider,
         photoVerdict: externalResult.photoVerdict || null

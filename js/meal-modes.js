@@ -1,6 +1,5 @@
 // ========== MODES DE REPAS (sur le pouce / à table) ==========
 import { saveRepasDraft, loadRepasDraft } from './storage.js';
-import * as Storage from './storage.js';
 import * as UI from './ui.js';
 
 const DEFAULT_QUICK_MEALS = [
@@ -175,8 +174,4 @@ export function setMode(mode) {
     const ta = document.getElementById('mealText');
     if (ta) ta.focus();
   }
-}
-
-export function getCurrentMode() {
-  return currentMode;
 }

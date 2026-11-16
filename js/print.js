@@ -1,6 +1,7 @@
 // Impression repas + eau : page autonome, lit localStorage (même origine).
 // Fonctions de filtrage pures et exportées (tests : tests/run-tests.mjs).
 import * as Storage from './storage.js';
+import { localDateISO } from './storage.js';
 
 export function filterMealsByDays(meals, days, now) {
   const ref = now || Date.now();
@@ -24,7 +25,7 @@ export function waterRowsByDays(raw, days, now) {
   }
   rows.sort(function(a, b) { return b.date.localeCompare(a.date); });
   if (days) {
-    const limitDate = new Date(ref - days * 86400000).toISOString().slice(0, 10);
+    const limitDate = localDateISO(new Date(ref - days * 86400000));
     return rows.filter(function(r) { return r.date >= limitDate; });
   }
   return rows;

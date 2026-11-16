@@ -1,4 +1,5 @@
 import * as Storage from './storage.js';
+import { localDatetimeISO } from './storage.js';
 import * as Medications from './medications.js';
 import * as Water from './water.js';
 import * as IA from './ia.js';
@@ -14,14 +15,6 @@ import * as MealModes from './meal-modes.js';
 import { getIASettings } from './ia-settings.js';
 
 let repasList = [];
-
-function refreshHome() {
-  repasList = Storage.loadRepas();
-  UI.setRepasList(repasList);
-  UI.renderMeals('mealsList');
-  Dashboard.renderDashboard('pnnsDashboard', repasList);
-  UI.updateTip(IA.getRandomTip(), 'pnnsTip');
-}
 
 // Version déployée — version.txt (date + commit, généré par update.sh) prioritaire,
 // manifest.json en repli. Distingue plusieurs déploiements le même jour.
@@ -149,7 +142,7 @@ async function init() {
 }
 
 async function saveCurrentMeal() {
-  const datetime = document.getElementById("mealDatetime").value || new Date().toISOString().slice(0, 16);
+  const datetime = document.getElementById("mealDatetime").value || localDatetimeISO();
   const text = document.getElementById("mealText").value.trim();
   const photo = Camera.getCurrentPhoto();
 
@@ -239,7 +232,7 @@ async function saveCurrentMeal() {
 function saveQuickMeal(meal) {
   const newMeal = {
     id: Date.now(),
-    datetime: new Date().toISOString().slice(0, 16),
+    datetime: localDatetimeISO(),
     text: meal.text,
     photo: null,
     createdAt: new Date().toISOString(),

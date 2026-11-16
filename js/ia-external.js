@@ -130,7 +130,6 @@ export async function analyseRepas(mealText, photoBase64, userMeds, healthCondit
   }
 }
 
-
 const TRENDS_SYSTEM_PROMPT = [
   "Tu es un assistant d'éducation alimentaire, PAS un médecin.",
   "",

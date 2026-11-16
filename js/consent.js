@@ -15,7 +15,7 @@ export function showConsentModal() {
         <h3 id="consentTitle">🔒 Consentement IA externe (RGPD)</h3>
         <p class="consent-intro">Pour activer l'analyse par une IA externe, tu dois accepter explicitement le traitement décrit ci-dessous :</p>
         <ul class="consent-list">
-          <li>📤 Tes <strong>repas</strong> (texte et photo) et tes <strong>médicaments/problèmes de santé</strong> seront envoyés au fournisseur IA choisi (Mistral AI ou Groq) <strong>uniquement le temps de l'analyse</strong>.</li>
+          <li>📤 Tes <strong>repas</strong> (texte et photo) et tes <strong>médicaments/problèmes de santé</strong> seront envoyés au fournisseur IA (Mistral AI, société française, hébergement européen) <strong>uniquement le temps de l'analyse</strong>.</li>
           <li>🗄️ Ces fournisseurs <strong>ne stockent pas</strong> ces données après le traitement.</li>
           <li>📱 Tes données restent sinon <strong>sur ton téléphone</strong> ; rien n'est conservé sur nos serveurs.</li>
           <li>↩️ Tu peux <strong>révoquer ce consentement à tout moment</strong> en revenant au mode local.</li>
