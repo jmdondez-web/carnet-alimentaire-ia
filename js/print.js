@@ -94,7 +94,7 @@ async function render() {
     html += "<table><tr><th>Quand</th><th>Repas</th><th>Alertes détectées</th></tr>";
     for (const m of meals) {
       const alert = m.interactionDetected ? escapeHtml(m.interactionDetected.message) : "";
-      html += "<tr><td>" + escapeHtml(fmtDate(m.datetime)) + "</td><td>" + escapeHtml(m.text || "") + "</td><td class='alert-cell'>" + alert + "</td></tr>";
+      html += "<tr><td>" + escapeHtml(fmtDate(m.datetime)) + "</td><td>" + (m.emoji ? m.emoji + " " : "") + escapeHtml(m.text || "") + "</td><td class='alert-cell'>" + alert + "</td></tr>";
     }
     html += "</table>";
   }

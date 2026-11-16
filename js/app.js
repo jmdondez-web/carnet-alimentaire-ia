@@ -234,6 +234,7 @@ function saveQuickMeal(meal) {
     id: Date.now(),
     datetime: localDatetimeISO(),
     text: meal.text,
+    emoji: UI.leadingEmoji(meal.label),
     photo: null,
     createdAt: new Date().toISOString(),
     iaSource: 'local'

@@ -11,7 +11,7 @@ import { computeStats, critiqueLocale, formatCritiqueIA, FAMILLES } from "../js/
 import { extractPhotoVerdict } from "../js/ia-external.js";
 import { matchInteractions } from "../js/ia.js";
 import { hasExternalWarning } from "../js/ia.js";
-import { showInteractionBadge } from "../js/ui.js";
+import { showInteractionBadge, leadingEmoji } from "../js/ui.js";
 import { getIAEndpoint, isProxyConfigured } from "../js/ia-settings.js";
 import { sortMealsByDatetimeDesc, updateMealInList, removeMealFromList } from "../js/storage.js";
 import { localDateISO, localDatetimeISO } from "../js/storage.js";
@@ -242,6 +242,22 @@ test("absence de tag → verdict null, texte intact (aucune invention côté cli
   const r = extractPhotoVerdict("Analyse simple sans tag");
   assert.equal(r.verdict, null);
   assert.equal(r.analysis, "Analyse simple sans tag");
+});
+
+// Emoji du libellé d'une chip « sur le pouce » — le repas enregistré
+// garde l'emoji de la chip (historique + impression), sans en polluer le texte.
+console.log("");
+console.log("Emoji de chip sur le pouce (leadingEmoji) :");
+test("libellé avec emoji → premier emoji extrait", () => {
+  assert.equal(leadingEmoji("☕ Petit-déj"), "☕");
+  assert.equal(leadingEmoji("🥪 Sandwich bureau"), "🥪");
+  assert.equal(leadingEmoji("ajout : 🍎 Fruit"), "🍎");
+});
+
+test("libellé sans emoji → chaîne vide, jamais undefined", () => {
+  assert.equal(leadingEmoji("Sandwich bureau"), "");
+  assert.equal(leadingEmoji(""), "");
+  assert.equal(leadingEmoji(null), "");
 });
 
 // Non-régression (13/11) : ui.js appelait Storage.sortMealsByDatetimeDesc alors

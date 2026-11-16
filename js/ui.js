@@ -25,6 +25,14 @@ export function showInteractionBadge(meal) {
   return !!meal.interactionDetected && meal.iaSource !== "external";
 }
 
+// Premier emoji d'un libellé (chips « sur le pouce ») — l'emoji de la chip
+// était perdu à l'enregistrement : seul le texte nu arrivait dans l'historique.
+// Pur, testé dans tests/run-tests.mjs. Retourne "" si aucun emoji.
+export function leadingEmoji(str) {
+  const m = (str || "").match(/\p{Extended_Pictographic}/u);
+  return m ? m[0] : "";
+}
+
 export function renderMeals(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -40,7 +48,7 @@ export function renderMeals(containerId) {
   container.innerHTML = sorted.map(meal => `
     <li>
       <div class="meal-date">${new Date(meal.datetime).toLocaleString()}</div>
-      <div class="meal-text">${escapeHtml(meal.text || "")}</div>
+      <div class="meal-text">${meal.emoji ? meal.emoji + " " : ""}${escapeHtml(meal.text || "")}</div>
       ${showInteractionBadge(meal) ? `<div class="alert-mini">⚠️ ${escapeHtml(meal.interactionDetected.message)}</div>` : ""}
       ${meal.analysis ? `<div class="meal-analysis"><span class="meal-analysis-head">🤖 Analyse — ${meal.iaSource === "external" ? "IA externe" : "règles locales"}</span>${escapeHtml(meal.analysis)}</div>` : ""}
       ${meal.photo ? `<img src="${meal.photo}" class="meal-photo" alt="photo">` : ""}
