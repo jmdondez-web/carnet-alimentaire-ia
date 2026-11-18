@@ -41,6 +41,15 @@ export function mealEmojiPrefix(meal) {
   return leadingEmoji(meal.text || "") ? "" : meal.emoji + " ";
 }
 
+// Texte de la colonne « Alertes » du rapport imprimable (print.js) : en mode IA
+// externe, interactionDetected.message contient l'analyse ENTIÈRE (choix de
+// stockage, pour le compteur des tendances) — l'imprimer la dupliquerait avec la
+// colonne « Analyse ». Pur, testé dans tests/run-tests.mjs.
+export function mealAlertText(meal) {
+  if (!meal || !showInteractionBadge(meal)) return "";
+  return meal.interactionDetected.message || "";
+}
+
 export function renderMeals(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;

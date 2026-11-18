@@ -2,7 +2,7 @@
 // Fonctions de filtrage pures et exportées (tests : tests/run-tests.mjs).
 import * as Storage from './storage.js';
 import { localDateISO } from './storage.js';
-import { mealEmojiPrefix } from './ui.js';
+import { mealEmojiPrefix, mealAlertText } from './ui.js';
 
 export function filterMealsByDays(meals, days, now) {
   const ref = now || Date.now();
@@ -92,10 +92,15 @@ async function render() {
   if (meals.length === 0) {
     html += "<p>Aucun repas enregistré sur la période.</p>";
   } else {
-    html += "<table><tr><th>Quand</th><th>Repas</th><th>Alertes détectées</th></tr>";
+    // L'analyse (IA ou règles locales) a sa propre colonne. La colonne
+    // « Alertes » n'affiche plus l'analyse IA en entier : avant le 16/11,
+    // l'ancienne heuristique la marquait comme alerte, c'est pourquoi elle
+    // apparaissait ici par effet de bord.
+    html += "<table><tr><th>Quand</th><th>Repas</th><th>Analyse</th><th>Alertes détectées</th></tr>";
     for (const m of meals) {
-      const alert = m.interactionDetected ? escapeHtml(m.interactionDetected.message) : "";
-      html += "<tr><td>" + escapeHtml(fmtDate(m.datetime)) + "</td><td>" + mealEmojiPrefix(m) + escapeHtml(m.text || "") + "</td><td class='alert-cell'>" + alert + "</td></tr>";
+      const analysis = m.analysis ? escapeHtml(m.analysis) : "";
+      const alert = escapeHtml(mealAlertText(m));
+      html += "<tr><td>" + escapeHtml(fmtDate(m.datetime)) + "</td><td>" + mealEmojiPrefix(m) + escapeHtml(m.text || "") + "</td><td class='analysis-cell'>" + analysis + "</td><td class='alert-cell'>" + alert + "</td></tr>";
     }
     html += "</table>";
   }

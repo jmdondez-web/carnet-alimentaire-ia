@@ -11,7 +11,7 @@ import { computeStats, critiqueLocale, formatCritiqueIA, FAMILLES } from "../js/
 import { extractPhotoVerdict } from "../js/ia-external.js";
 import { matchInteractions } from "../js/ia.js";
 import { hasExternalWarning } from "../js/ia.js";
-import { showInteractionBadge, leadingEmoji, mealEmojiPrefix } from "../js/ui.js";
+import { showInteractionBadge, leadingEmoji, mealEmojiPrefix, mealAlertText } from "../js/ui.js";
 import { getIAEndpoint, isProxyConfigured } from "../js/ia-settings.js";
 import { sortMealsByDatetimeDesc, updateMealInList, removeMealFromList } from "../js/storage.js";
 import { localDateISO, localDatetimeISO } from "../js/storage.js";
@@ -272,6 +272,19 @@ test("mealEmojiPrefix : emoji ajouté seulement si le texte n'en a pas", () => {
 test("mealEmojiPrefix : repas sans texte (photo seule)", () => {
   assert.equal(mealEmojiPrefix({ emoji: "📷", text: "(photo)" }), "📷 ");
   assert.equal(mealEmojiPrefix({ emoji: "📷", text: "" }), "📷 ");
+});
+
+// Colonne « Alertes » du rapport imprimable — l'analyse IA ne doit plus y
+// apparaître (colonne « Analyse » dédiée), l'alerte locale y reste.
+test("mealAlertText : alerte locale (règles) → texte de l'alerte", () => {
+  assert.equal(mealAlertText({ iaSource: "local", interactionDetected: { message: "⚠️ sel + hypertension" } }), "⚠️ sel + hypertension");
+  assert.equal(mealAlertText({ iaSource: "local (fallback)", interactionDetected: { message: "x" } }), "x");
+});
+
+test("mealAlertText : mode IA externe → vide (l'analyse a sa colonne), sans interaction → vide", () => {
+  assert.equal(mealAlertText({ iaSource: "external", analysis: "Texte long de l'analyse", interactionDetected: { message: "Texte long de l'analyse" } }), "");
+  assert.equal(mealAlertText({ iaSource: "local", analysis: "analyse" }), "");
+  assert.equal(mealAlertText(null), "");
 });
 
 // Non-régression (13/11) : ui.js appelait Storage.sortMealsByDatetimeDesc alors
